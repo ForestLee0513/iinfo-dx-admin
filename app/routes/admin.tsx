@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { authKeys, useLogoutMutation, useMyInfoQuery } from "@/api/auth/requests";
+import { canAccessAdmin } from "@/api/auth/roles";
 import { setAuthErrorCallback } from "@/lib/axios";
 
 const NAV_ITEMS = [
@@ -15,7 +16,11 @@ export default function AdminLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const logout = useLogoutMutation();
-  const { data: me } = useMyInfoQuery();
+  const { data: me, isLoading, isError } = useMyInfoQuery();
+
+  // 어드민 권한이 없는 세션(비로그인·조회 실패·비-ADMIN role)은 콘솔 접근 차단.
+  // 프론트 게이트는 UX 방어일 뿐, 실제 인가는 백엔드가 role을 검증해야 한다.
+  const authorized = canAccessAdmin(me?.app_role);
 
   useEffect(() => {
     setAuthErrorCallback(() => {
@@ -24,6 +29,27 @@ export default function AdminLayout() {
     });
     return () => setAuthErrorCallback(null);
   }, [navigate, queryClient]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (isError || !authorized) {
+      queryClient.removeQueries({ queryKey: authKeys.all });
+      navigate("/", { replace: true });
+    }
+  }, [isLoading, isError, authorized, navigate, queryClient]);
+
+  // 권한 확인 전/차단 대상은 어드민 UI를 렌더링하지 않는다.
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 text-sm text-gray-400">
+        불러오는 중…
+      </div>
+    );
+  }
+
+  if (isError || !authorized) {
+    return null;
+  }
 
   function handleLogout() {
     logout.mutate(undefined, {
