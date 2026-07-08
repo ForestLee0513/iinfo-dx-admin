@@ -45,14 +45,26 @@ const BAN_DURATION_OPTIONS = [
 
 type BanDurationValue = (typeof BAN_DURATION_OPTIONS)[number]["value"];
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
 /*
 오늘 기준 n일 뒤 날짜를 로컬 기준 YYYY-MM-DD로 반환한다. (date input 값/min용)
 */
 function localDateAfter(days: number) {
   const d = new Date();
   d.setDate(d.getDate() + days);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+function formatTimeOfDay(d: Date) {
+  return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+
+/*
+"nnnn년 nn월 nn일 HH:mm" 표기. (정지 해제 예정 일시 안내용)
+*/
+function formatKoreanDateTime(d: Date) {
+  return `${d.getFullYear()}년 ${pad2(d.getMonth() + 1)}월 ${pad2(d.getDate())}일 ${formatTimeOfDay(d)}`;
 }
 
 const inputClass =
@@ -61,6 +73,61 @@ const inputClass =
 function formatDate(iso?: string | null) {
   if (!iso) return "-";
   return iso.slice(0, 10);
+}
+
+/*
+로컬 시각 기준 "YYYY-MM-DD HH:mm" 표기. (정지 해제 예정 일시 노출용)
+*/
+function formatDateTime(iso?: string | null) {
+  if (!iso) return "-";
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${formatTimeOfDay(d)}`;
+}
+
+/*
+정지 배지. 마우스를 올리면 정지 사유와 해제 예정일을 툴팁으로 보여준다.
+테이블 래퍼(overflow-x-auto)에 잘리지 않도록 fixed 좌표로 띄운다.
+*/
+function BannedBadge({
+  reason,
+  until,
+}: {
+  reason?: string | null;
+  until?: string | null;
+}) {
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+
+  return (
+    <span
+      className="relative inline-flex"
+      onMouseEnter={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setPos({ x: rect.left + rect.width / 2, y: rect.top });
+      }}
+      onMouseLeave={() => setPos(null)}
+    >
+      <span className="inline-flex cursor-help items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
+        정지
+      </span>
+      {pos && (
+        <span
+          className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg"
+          style={{ left: pos.x, top: pos.y - 8 }}
+        >
+          <span className="block font-semibold">
+            {reason?.trim() || "사유 미입력"}
+          </span>
+          <span className="mt-0.5 block text-gray-300">
+            {until ? `${formatDateTime(until)}까지 정지` : "영구 정지"}
+          </span>
+          <span
+            className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-gray-900"
+            aria-hidden
+          />
+        </span>
+      )}
+    </span>
+  );
 }
 
 function SkeletonRows({ count }: { count: number }) {
@@ -107,6 +174,8 @@ export default function Members() {
   const [banReason, setBanReason] = useState("");
   const [banDuration, setBanDuration] = useState<BanDurationValue>("7");
   const [banUntilDate, setBanUntilDate] = useState(""); // 날짜 지정 시 YYYY-MM-DD
+  // 정지 기간 계산의 기준 시각. 팝업을 연 순간으로 고정한다.
+  const [banOpenedAt, setBanOpenedAt] = useState(() => new Date());
 
   // 이메일 입력은 타이핑마다 요청하지 않도록 300ms 디바운스한다.
   const [debouncedEmail, setDebouncedEmail] = useState("");
@@ -182,22 +251,34 @@ export default function Members() {
     setBanReason("");
     setBanDuration("7");
     setBanUntilDate(localDateAfter(7));
+    setBanOpenedAt(new Date());
     setBanModalOpen(true);
   }
 
   /*
-  선택한 기간을 ban_until(ISO)로 변환한다.
-  - 프리셋: 지금부터 N일 뒤
-  - 날짜 지정: 선택한 날짜의 로컬 0시에 해제
-  - 영구: undefined (미전송)
+  선택한 기간을 해제 예정 일시로 변환한다. 기준 시각은 팝업을 연 시각(banOpenedAt).
+  - 프리셋: 기준 시각에서 N일 뒤
+  - 날짜 지정: 선택한 날짜의 기준 시각(시:분:초)에 해제 (날짜 미선택이면 undefined)
+  - 영구: undefined
   */
-  function resolveBanUntil(): string | undefined {
+  function resolveBanUntilDate(): Date | undefined {
     if (banDuration === "permanent") return undefined;
-    if (banDuration === "custom")
-      return new Date(`${banUntilDate}T00:00:00`).toISOString();
+    if (banDuration === "custom") {
+      if (!banUntilDate) return undefined;
+      const d = new Date(`${banUntilDate}T00:00:00`);
+      d.setHours(
+        banOpenedAt.getHours(),
+        banOpenedAt.getMinutes(),
+        banOpenedAt.getSeconds(),
+        0,
+      );
+      return d;
+    }
     const days = Number(banDuration);
-    return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+    return new Date(banOpenedAt.getTime() + days * 24 * 60 * 60 * 1000);
   }
+
+  const banReleaseDate = resolveBanUntilDate(); // undefined = 영구 또는 날짜 미선택
 
   const banFormInvalid =
     !banReason.trim() || (banDuration === "custom" && !banUntilDate);
@@ -206,7 +287,7 @@ export default function Members() {
     if (banFormInvalid) return;
 
     const reason = banReason.trim();
-    const ban_until = resolveBanUntil();
+    const ban_until = resolveBanUntilDate()?.toISOString();
 
     const results = await Promise.allSettled(
       banTargets.map((u) =>
@@ -297,15 +378,20 @@ export default function Members() {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         {/* 액션 바 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <p className="text-sm text-gray-500">
-            총{" "}
-            <span className="font-semibold text-gray-900">{total}</span>명
-            {selectedIds.size > 0 && (
-              <span className="ml-2 text-gray-400">
-                ({selectedIds.size}명 선택됨)
-              </span>
-            )}
-          </p>
+          <div>
+            <p className="text-sm text-gray-500">
+              총 <span className="font-semibold text-gray-900">{total}</span>명
+              {selectedIds.size > 0 && (
+                <span className="ml-2 text-gray-400">
+                  ({selectedIds.size}명 선택됨)
+                </span>
+              )}
+            </p>
+            <p className="mt-0.5 text-xs text-gray-400">
+              '정지' 표시에 마우스를 가져다 대면 정지 사유와 해제 예정일을
+              확인할 수 있습니다.
+            </p>
+          </div>
           <div className="flex gap-2">
             <button
               onClick={openBanModal}
@@ -412,27 +498,16 @@ export default function Members() {
                       {formatDate(member.last_sign_in_at)}
                     </td>
                     <td className="px-4 py-3.5">
-                      <span
-                        title={
-                          member.is_banned
-                            ? [
-                                member.ban_reason,
-                                member.ban_until
-                                  ? `${formatDate(member.ban_until)}까지`
-                                  : "영구 정지",
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")
-                            : undefined
-                        }
-                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                          member.is_banned
-                            ? "bg-red-50 text-red-600"
-                            : "bg-green-50 text-green-700"
-                        }`}
-                      >
-                        {member.is_banned ? "정지" : "활성"}
-                      </span>
+                      {member.is_banned ? (
+                        <BannedBadge
+                          reason={member.ban_reason}
+                          until={member.ban_until}
+                        />
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
+                          활성
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -544,18 +619,18 @@ export default function Members() {
                 ))}
               </div>
               {banDuration === "custom" && (
-                <div className="mt-2 flex flex-col gap-1.5">
-                  <input
-                    type="date"
-                    value={banUntilDate}
-                    min={localDateAfter(1)}
-                    onChange={(e) => setBanUntilDate(e.target.value)}
-                    className={inputClass + " cursor-pointer"}
-                  />
-                  <p className="text-xs text-gray-400">
-                    선택한 날짜 0시에 정지가 해제됩니다.
-                  </p>
-                </div>
+                <input
+                  type="date"
+                  value={banUntilDate}
+                  min={localDateAfter(1)}
+                  onChange={(e) => setBanUntilDate(e.target.value)}
+                  className={inputClass + " mt-2 cursor-pointer"}
+                />
+              )}
+              {banDuration !== "permanent" && banReleaseDate && (
+                <p className="text-xs text-gray-400">
+                  {formatKoreanDateTime(banReleaseDate)}에 정지가 해제됩니다.
+                </p>
               )}
             </div>
 
