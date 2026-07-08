@@ -1,12 +1,35 @@
 import { useEffect } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { authKeys, useLogoutMutation, useMyInfoQuery } from "@/api/auth/requests";
+import {
+  authKeys,
+  useLogoutMutation,
+  useMyInfoQuery,
+} from "@/api/auth/requests";
+import { AUTH_MEMBER_ROLE } from "@/api/auth/constants";
 import { canAccessAdmin } from "@/api/auth/roles";
 import { setAuthErrorCallback } from "@/lib/axios";
+import type { AuthMemberRole } from "@/api/auth/types";
 
-const NAV_ITEMS = [
+/*
+사이드바 메뉴 정의.
+roles를 지정하면 해당 역할에게만 노출되고, 생략하면 어드민 접근이 가능한
+모든 역할에게 노출된다. 메뉴 숨김은 UX 제어일 뿐이므로 해당 페이지의
+라우트/백엔드에서도 역할 검증이 함께 이루어져야 한다.
+*/
+type NavItem = {
+  to: string;
+  label: string;
+  roles?: readonly AuthMemberRole[];
+};
+
+const NAV_ITEMS: NavItem[] = [
   { to: "/members", label: "회원 관리" },
+  {
+    to: "/permissions",
+    label: "권한 관리",
+    roles: [AUTH_MEMBER_ROLE.SUPER_ADMIN],
+  },
   { to: "/crawling", label: "크롤링 관리" },
   { to: "/crawling-history", label: "크롤링 내역" },
   { to: "/ranking", label: "서열표 관리" },
@@ -54,8 +77,17 @@ function AdminLayoutSkeleton() {
   );
 }
 
+/*
+경로가 메뉴 항목(to)에 속하는지 확인. "/permissions"와 "/permissions/123"은
+매칭되지만 "/permissions-foo" 같은 다른 경로는 매칭되지 않는다.
+*/
+function isPathUnderNav(pathname: string, to: string): boolean {
+  return pathname === to || pathname.startsWith(`${to}/`);
+}
+
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const logout = useLogoutMutation();
   const { data: me, isLoading, isError } = useMyInfoQuery();
@@ -63,6 +95,13 @@ export default function AdminLayout() {
   // 어드민 권한이 없는 세션(비로그인·조회 실패·비-ADMIN role)은 콘솔 접근 차단.
   // 프론트 게이트는 UX 방어일 뿐, 실제 인가는 백엔드가 role을 검증해야 한다.
   const authorized = canAccessAdmin(me?.app_role);
+
+  // 현재 URL이 역할 제한 메뉴에 해당하면, 메뉴 숨김과 별개로 직접 접근도 차단.
+  const restrictedRoles = NAV_ITEMS.find(
+    ({ to, roles }) => roles && isPathUnderNav(location.pathname, to),
+  )?.roles;
+  const routeAllowed =
+    !restrictedRoles || (!!me && restrictedRoles.includes(me.app_role));
 
   useEffect(() => {
     setAuthErrorCallback(() => {
@@ -80,6 +119,14 @@ export default function AdminLayout() {
     }
   }, [isLoading, isError, authorized, navigate, queryClient]);
 
+  // URL 직접 입력 등으로 역할 제한 경로에 진입한 경우 기본 페이지로 돌려보낸다.
+  useEffect(() => {
+    if (isLoading || isError || !authorized) return;
+    if (!routeAllowed) {
+      navigate("/members", { replace: true });
+    }
+  }, [isLoading, isError, authorized, routeAllowed, navigate]);
+
   // 권한 확인 전/차단 대상은 어드민 UI를 렌더링하지 않는다.
   // 로딩 중에는 실제 메뉴·데이터 없이 레이아웃 골격만 스켈레톤으로 보여준다.
   if (isLoading) {
@@ -89,6 +136,16 @@ export default function AdminLayout() {
   if (isError || !authorized) {
     return null;
   }
+
+  // 리다이렉트가 실행되기 전까지 제한된 페이지 내용이 노출되지 않도록 차단.
+  if (!routeAllowed) {
+    return null;
+  }
+
+  // 역할 제한이 없는 메뉴는 모두 노출, 있으면 현재 역할이 포함될 때만 노출.
+  const visibleNavItems = NAV_ITEMS.filter(
+    ({ roles }) => !roles || (me && roles.includes(me.app_role)),
+  );
 
   function handleLogout() {
     logout.mutate(undefined, {
@@ -106,7 +163,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="flex-1 flex flex-col">
-          {NAV_ITEMS.map(({ to, label }) => (
+          {visibleNavItems.map(({ to, label }) => (
             <NavLink
               key={to}
               to={to}

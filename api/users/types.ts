@@ -55,6 +55,22 @@ export interface UserDetail extends UserSummary {
 }
 
 /*
+PUT /api/v1/admin/users/{user_id}/role 요청 (OpenAPI: RoleUpdateRequest)
+SUPER_ADMIN 전용 API. SUPER_ADMIN 부여와 본인 역할 변경은 서버가 400으로 거부한다.
+*/
+export interface UserRoleUpdateRequest {
+  role: AuthMemberRole;
+}
+
+/*
+PUT /api/v1/admin/users/{user_id}/role 응답 (OpenAPI: RoleUpdateResponse)
+*/
+export interface UserRoleUpdateResponse {
+  user_id: string;
+  role: AuthMemberRole;
+}
+
+/*
 POST /api/v1/admin/users/{user_id}/ban 요청 (OpenAPI: BanRequest)
 */
 export interface UserBanRequest {

@@ -19,6 +19,8 @@ import type {
   UserDetail,
   UserListRequest,
   UserListResponse,
+  UserRoleUpdateRequest,
+  UserRoleUpdateResponse,
 } from "./types";
 
 /*
@@ -145,6 +147,37 @@ export function useBanUserMutation() {
     }: UserBanRequest & { userId: string }) => banUser(userId, body),
     onSuccess: (_data, { userId }) => {
       invalidateUser(queryClient, userId);
+    },
+  });
+}
+
+/*
+PUT /api/v1/admin/users/{user_id}/role — 역할 변경 (SUPER_ADMIN 전용)
+SUPER_ADMIN 부여와 본인 역할 변경은 서버가 400으로 거부한다.
+*/
+export async function updateUserRole(
+  userId: string,
+  body: UserRoleUpdateRequest,
+) {
+  const { data } = await api.put<UserRoleUpdateResponse>(
+    `${USERS_BASE}/${userId}/role`,
+    body,
+  );
+  return data;
+}
+
+export function useUpdateUserRoleMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userId,
+      ...body
+    }: UserRoleUpdateRequest & { userId: string }) =>
+      updateUserRole(userId, body),
+    // 역할은 상세(profile.role)에서 읽으므로 해당 사용자 상세 캐시를 무효화한다.
+    onSuccess: (_data, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) });
     },
   });
 }
