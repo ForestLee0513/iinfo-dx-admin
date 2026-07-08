@@ -24,11 +24,9 @@
   --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
 }
 
+/* 어드민은 라이트 테마 고정 — 시스템 다크모드가 네이티브 컨트롤(input·select·스크롤바)에 적용되지 않도록 한다. */
 html,
 body {
-  @apply bg-white dark:bg-gray-950;
-
-  @media (prefers-color-scheme: dark) {
-    color-scheme: dark;
-  }
+  @apply bg-white;
+  color-scheme: light;
 }
