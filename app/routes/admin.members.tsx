@@ -28,6 +28,33 @@ const PLATFORM_OPTIONS = [
 const ACTIVE_OPTIONS = ["전체", "활성", "정지"] as const;
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
+/*
+정지 기간 선택지.
+- days 프리셋: 오늘부터 N일 뒤 해제
+- custom: datepicker로 해제일 직접 선택
+- permanent: ban_until 미전송 → 영구 정지
+*/
+const BAN_DURATION_OPTIONS = [
+  { value: "1", label: "1일" },
+  { value: "3", label: "3일" },
+  { value: "7", label: "7일" },
+  { value: "30", label: "30일" },
+  { value: "custom", label: "날짜 지정" },
+  { value: "permanent", label: "영구" },
+] as const;
+
+type BanDurationValue = (typeof BAN_DURATION_OPTIONS)[number]["value"];
+
+/*
+오늘 기준 n일 뒤 날짜를 로컬 기준 YYYY-MM-DD로 반환한다. (date input 값/min용)
+*/
+function localDateAfter(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 const inputClass =
   "w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10";
 
@@ -75,6 +102,11 @@ export default function Members() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  const [banModalOpen, setBanModalOpen] = useState(false);
+  const [banReason, setBanReason] = useState("");
+  const [banDuration, setBanDuration] = useState<BanDurationValue>("7");
+  const [banUntilDate, setBanUntilDate] = useState(""); // 날짜 지정 시 YYYY-MM-DD
 
   // 이메일 입력은 타이핑마다 요청하지 않도록 300ms 디바운스한다.
   const [debouncedEmail, setDebouncedEmail] = useState("");
@@ -140,24 +172,50 @@ export default function Members() {
     setSelectedIds(new Set());
   }
 
-  async function handleBan() {
-    const targets = selectedUsers.filter((u) => !u.is_banned);
-    if (targets.length === 0) {
+  const banTargets = selectedUsers.filter((u) => !u.is_banned);
+
+  function openBanModal() {
+    if (banTargets.length === 0) {
       window.alert("선택한 회원이 모두 이미 정지 상태입니다.");
       return;
     }
-    const reason = window.prompt(
-      `${targets.length}명을 정지 처리합니다.\n정지 사유를 입력하세요. (미입력 시 취소)`,
-    );
-    if (!reason?.trim()) return;
+    setBanReason("");
+    setBanDuration("7");
+    setBanUntilDate(localDateAfter(7));
+    setBanModalOpen(true);
+  }
+
+  /*
+  선택한 기간을 ban_until(ISO)로 변환한다.
+  - 프리셋: 지금부터 N일 뒤
+  - 날짜 지정: 선택한 날짜의 로컬 0시에 해제
+  - 영구: undefined (미전송)
+  */
+  function resolveBanUntil(): string | undefined {
+    if (banDuration === "permanent") return undefined;
+    if (banDuration === "custom")
+      return new Date(`${banUntilDate}T00:00:00`).toISOString();
+    const days = Number(banDuration);
+    return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+  }
+
+  const banFormInvalid =
+    !banReason.trim() || (banDuration === "custom" && !banUntilDate);
+
+  async function confirmBan() {
+    if (banFormInvalid) return;
+
+    const reason = banReason.trim();
+    const ban_until = resolveBanUntil();
 
     const results = await Promise.allSettled(
-      targets.map((u) =>
-        banMutation.mutateAsync({ userId: u.id, reason: reason.trim() }),
+      banTargets.map((u) =>
+        banMutation.mutateAsync({ userId: u.id, reason, ban_until }),
       ),
     );
     const failed = results.filter((r) => r.status === "rejected").length;
     if (failed > 0) window.alert(`${failed}명 정지 처리에 실패했습니다.`);
+    setBanModalOpen(false);
     setSelectedIds(new Set());
   }
 
@@ -250,7 +308,7 @@ export default function Members() {
           </p>
           <div className="flex gap-2">
             <button
-              onClick={handleBan}
+              onClick={openBanModal}
               disabled={selectedIds.size === 0 || isMutating}
               className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -355,7 +413,18 @@ export default function Members() {
                     </td>
                     <td className="px-4 py-3.5">
                       <span
-                        title={member.ban_reason ?? undefined}
+                        title={
+                          member.is_banned
+                            ? [
+                                member.ban_reason,
+                                member.ban_until
+                                  ? `${formatDate(member.ban_until)}까지`
+                                  : "영구 정지",
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")
+                            : undefined
+                        }
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold ${
                           member.is_banned
                             ? "bg-red-50 text-red-600"
@@ -421,6 +490,94 @@ export default function Members() {
           </div>
         </div>
       </div>
+
+      {/* 정지 처리 모달 */}
+      {banModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4"
+          onClick={() => !banMutation.isPending && setBanModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-gray-900">정지 처리</h2>
+            <p className="mt-1 text-sm text-gray-500">
+              <span className="font-semibold text-gray-900">
+                {banTargets.length}
+              </span>
+              명을 정지 처리합니다.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-gray-700">
+                정지 사유
+              </label>
+              <textarea
+                value={banReason}
+                onChange={(e) => setBanReason(e.target.value)}
+                placeholder="정지 사유를 입력하세요."
+                rows={3}
+                autoFocus
+                className={inputClass + " resize-none"}
+              />
+            </div>
+
+            <div className="mt-4 flex flex-col gap-1.5">
+              <label className="text-sm font-medium text-gray-700">
+                정지 기간
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {BAN_DURATION_OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => setBanDuration(o.value)}
+                    className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition-all ${
+                      banDuration === o.value
+                        ? "border-gray-900 bg-gray-900 text-white"
+                        : "border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                    }`}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+              {banDuration === "custom" && (
+                <div className="mt-2 flex flex-col gap-1.5">
+                  <input
+                    type="date"
+                    value={banUntilDate}
+                    min={localDateAfter(1)}
+                    onChange={(e) => setBanUntilDate(e.target.value)}
+                    className={inputClass + " cursor-pointer"}
+                  />
+                  <p className="text-xs text-gray-400">
+                    선택한 날짜 0시에 정지가 해제됩니다.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={() => setBanModalOpen(false)}
+                disabled={banMutation.isPending}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmBan}
+                disabled={banFormInvalid || banMutation.isPending}
+                className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {banMutation.isPending ? "정지 처리 중…" : "정지 처리"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

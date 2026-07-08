@@ -9,14 +9,17 @@ export const AUTH_BASE = "/api/v1/admin/auth";
 export const AUTH_MEMBER_ROLE = {
   USER: "USER",
   ADMIN: "ADMIN",
-  // OPERATOR: "OPERATOR", // 부관리자 예시 — 서버 역할 추가 시 주석 해제
+  SUPER_ADMIN: "SUPER_ADMIN",
 } as const;
 
 /*
 어드민 콘솔 접근이 허용되는 역할 집합.
 부관리자를 추가할 때는 AUTH_MEMBER_ROLE에 멤버를 더한 뒤 이 목록에 넣으면 된다.
 */
-export const ADMIN_ROLES = [AUTH_MEMBER_ROLE.ADMIN] as const;
+export const ADMIN_ROLES = [
+  AUTH_MEMBER_ROLE.ADMIN,
+  AUTH_MEMBER_ROLE.SUPER_ADMIN,
+] as const;
 
 export const AUTH_OAUTH_PROVIDERS = ["google"] as const;
 
