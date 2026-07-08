@@ -12,6 +12,48 @@ const NAV_ITEMS = [
   { to: "/ranking", label: "서열표 관리" },
 ];
 
+function AdminLayoutSkeleton() {
+  return (
+    <div className="flex h-screen overflow-hidden">
+      <aside className="w-60 flex-shrink-0 bg-[#3749a6] flex flex-col">
+        <div className="px-8 py-7">
+          <div className="h-6 w-24 rounded bg-white/20 animate-pulse" />
+        </div>
+        <nav className="flex-1 flex flex-col gap-1 px-8 py-1">
+          {Array.from({ length: 4 }, (_, i) => (
+            <div
+              key={i}
+              className="my-3 h-4 w-28 rounded bg-white/15 animate-pulse"
+            />
+          ))}
+        </nav>
+        <div className="border-t border-white/15 px-8 py-6 flex flex-col gap-6">
+          <div className="h-4 w-12 rounded bg-white/15 animate-pulse" />
+          <div className="h-4 w-16 rounded bg-white/15 animate-pulse" />
+        </div>
+      </aside>
+
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
+        <header className="h-[70px] flex-shrink-0 bg-white border-b border-gray-100 flex items-center justify-end px-8">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse" />
+            <div className="flex flex-col gap-1.5">
+              <div className="h-3.5 w-40 rounded bg-gray-100 animate-pulse" />
+              <div className="h-3 w-12 rounded bg-gray-100 animate-pulse" />
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-hidden p-8">
+          <div className="h-8 w-36 rounded bg-gray-200 mb-6 animate-pulse" />
+          <div className="h-24 rounded-2xl bg-white border border-gray-100 mb-5 animate-pulse" />
+          <div className="h-96 rounded-2xl bg-white border border-gray-100 animate-pulse" />
+        </main>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminLayout() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -39,12 +81,9 @@ export default function AdminLayout() {
   }, [isLoading, isError, authorized, navigate, queryClient]);
 
   // 권한 확인 전/차단 대상은 어드민 UI를 렌더링하지 않는다.
+  // 로딩 중에는 실제 메뉴·데이터 없이 레이아웃 골격만 스켈레톤으로 보여준다.
   if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50 text-sm text-gray-400">
-        불러오는 중…
-      </div>
-    );
+    return <AdminLayoutSkeleton />;
   }
 
   if (isError || !authorized) {

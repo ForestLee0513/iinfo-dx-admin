@@ -36,6 +36,38 @@ function formatDate(iso?: string | null) {
   return iso.slice(0, 10);
 }
 
+function SkeletonRows({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }, (_, i) => (
+        <tr key={i} className="animate-pulse">
+          <td className="w-12 px-5 py-3.5">
+            <div className="h-4 w-4 rounded bg-gray-100" />
+          </td>
+          <td className="px-4 py-3.5">
+            <div className="h-4 w-6 rounded bg-gray-100" />
+          </td>
+          <td className="px-4 py-3.5">
+            <div className="h-4 w-44 rounded bg-gray-100" />
+          </td>
+          <td className="px-4 py-3.5">
+            <div className="h-5 w-16 rounded-full bg-gray-100" />
+          </td>
+          <td className="px-4 py-3.5">
+            <div className="h-4 w-20 rounded bg-gray-100" />
+          </td>
+          <td className="px-4 py-3.5">
+            <div className="h-4 w-20 rounded bg-gray-100" />
+          </td>
+          <td className="px-4 py-3.5">
+            <div className="h-5 w-12 rounded-full bg-gray-100" />
+          </td>
+        </tr>
+      ))}
+    </>
+  );
+}
+
 export default function Members() {
   const [emailFilter, setEmailFilter] = useState("");
   const [platformFilter, setPlatformFilter] = useState<string>("전체");
@@ -266,14 +298,7 @@ export default function Members() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {isPending ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-6 py-16 text-center text-gray-400"
-                  >
-                    불러오는 중…
-                  </td>
-                </tr>
+                <SkeletonRows count={pageSize} />
               ) : isError ? (
                 <tr>
                   <td
