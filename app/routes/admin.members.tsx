@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 
 import {
   useBanUserMutation,
@@ -10,6 +11,7 @@ import { PLATFORM_OPTIONS } from "@/components/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Field } from "@/components/ui/Field";
 import { FilterCard } from "@/components/ui/FilterCard";
+import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDate } from "@/components/ui/format";
 import { Modal } from "@/components/ui/Modal";
 import { Pagination, PAGE_SIZE_OPTIONS } from "@/components/ui/Pagination";
@@ -131,6 +133,8 @@ export default function Members() {
   const [banUntilDate, setBanUntilDate] = useState(""); // 날짜 지정 시 YYYY-MM-DD
   // 정지 기간 계산의 기준 시각. 팝업을 연 순간으로 고정한다.
   const [banOpenedAt, setBanOpenedAt] = useState(() => new Date());
+  // 서버가 거부한 사유(본인 정지 시도 등)를 모달 하단 경고 라벨로 노출한다.
+  const [banError, setBanError] = useState<string | null>(null);
 
   // 이메일 입력은 타이핑마다 요청하지 않도록 300ms 디바운스한다.
   const [debouncedEmail, setDebouncedEmail] = useState("");
@@ -196,6 +200,8 @@ export default function Members() {
   }
 
   const banTargets = selectedUsers.filter((u) => !u.is_banned);
+  // 함께 선택됐지만 이미 정지 상태라 정지 처리 대상이 아닌 사용자
+  const alreadyBannedTargets = selectedUsers.filter((u) => u.is_banned);
 
   function openBanModal() {
     if (banTargets.length === 0) {
@@ -206,6 +212,7 @@ export default function Members() {
     setBanDuration("7");
     setBanUntilDate(localDateAfter(7));
     setBanOpenedAt(new Date());
+    setBanError(null);
     setBanModalOpen(true);
   }
 
@@ -239,6 +246,7 @@ export default function Members() {
 
   async function confirmBan() {
     if (banFormInvalid) return;
+    setBanError(null);
 
     const reason = banReason.trim();
     const ban_until = resolveBanUntilDate()?.toISOString();
@@ -248,8 +256,31 @@ export default function Members() {
         banMutation.mutateAsync({ userId: u.id, reason, ban_until }),
       ),
     );
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed > 0) window.alert(`${failed}명 정지 처리에 실패했습니다.`);
+    // 실패 목록: 이미 정지된 사용자 + 서버가 거부한 사용자를 동일한 형식으로 모은다.
+    // (allSettled는 순서를 보존하므로 results[i]를 banTargets[i]와 매칭한다)
+    const failures: { user: UserSummary; message: string }[] = [
+      ...alreadyBannedTargets.map((user) => ({
+        user,
+        message: "이미 정지된 사용자입니다.",
+      })),
+      ...results.flatMap((r, i) =>
+        r.status === "rejected"
+          ? [{ user: banTargets[i], message: getApiErrorMessage(r.reason) }]
+          : [],
+      ),
+    ];
+    if (failures.length > 0) {
+      const lines = failures.map(
+        ({ user, message }) => `· ${user.email ?? user.id}: ${message}`,
+      );
+      setBanError(
+        [
+          `${selectedIds.size}명 중 ${failures.length}명 정지 처리에 실패했습니다.`,
+          ...lines,
+        ].join("\n"),
+      );
+      return; // 실패 사유 확인을 위해 모달을 열어 둔다.
+    }
     setBanModalOpen(false);
     setSelectedIds(new Set());
   }
@@ -265,8 +296,22 @@ export default function Members() {
     const results = await Promise.allSettled(
       targets.map((u) => unbanMutation.mutateAsync(u.id)),
     );
-    const failed = results.filter((r) => r.status === "rejected").length;
-    if (failed > 0) window.alert(`${failed}명 정지 해제에 실패했습니다.`);
+    // allSettled는 순서를 보존하므로 results[i]를 targets[i]와 매칭한다.
+    const failures = results
+      .map((r, i) => ({ r, user: targets[i] }))
+      .filter((x) => x.r.status === "rejected");
+    if (failures.length > 0) {
+      const lines = failures.map(
+        ({ r, user }) =>
+          `· ${user.email ?? user.id}: ${getApiErrorMessage((r as PromiseRejectedResult).reason)}`,
+      );
+      window.alert(
+        [
+          `${selectedIds.size}명 중 ${failures.length}명 정지 해제에 실패했습니다.`,
+          ...lines,
+        ].join("\n"),
+      );
+    }
     setSelectedIds(new Set());
   }
 
@@ -305,7 +350,14 @@ export default function Members() {
       header: "이메일",
       cellClassName: "px-4 py-3.5 font-medium text-gray-900",
       skeleton: <div className="h-4 w-44 rounded bg-gray-100" />,
-      cell: (member) => member.email ?? "-",
+      cell: (member) => (
+        <Link
+          to={`/members/${member.id}`}
+          className="hover:underline hover:text-[#3749a6] transition-colors"
+        >
+          {member.email ?? "-"}
+        </Link>
+      ),
     },
     {
       key: "provider",
@@ -375,7 +427,9 @@ export default function Members() {
         <Field label="활성 여부">
           <select
             value={activeFilter}
-            onChange={(e) => handleFilterChange(setActiveFilter, e.target.value)}
+            onChange={(e) =>
+              handleFilterChange(setActiveFilter, e.target.value)
+            }
             className={inputClass + " cursor-pointer"}
           >
             {ACTIVE_OPTIONS.map((o) => (
@@ -403,7 +457,8 @@ export default function Members() {
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <div>
               <p className="text-sm text-gray-500">
-                총 <span className="font-semibold text-gray-900">{total}</span>명
+                총 <span className="font-semibold text-gray-900">{total}</span>
+                명
                 {selectedIds.size > 0 && (
                   <span className="ml-2 text-gray-400">
                     ({selectedIds.size}명 선택됨)
@@ -530,6 +585,12 @@ export default function Members() {
               </p>
             )}
           </div>
+
+          {banError && (
+            <p className="mt-4 whitespace-pre-wrap rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
+              {banError}
+            </p>
+          )}
         </Modal>
       )}
     </div>
