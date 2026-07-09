@@ -6,27 +6,22 @@ import {
   useUserListQuery,
 } from "@/api/users/requests";
 import type { UserSummary } from "@/api/users/types";
+import { PLATFORM_OPTIONS } from "@/components/constants";
+import { Badge } from "@/components/ui/Badge";
+import { Field } from "@/components/ui/Field";
+import { FilterCard } from "@/components/ui/FilterCard";
+import { formatDate } from "@/components/ui/format";
+import { Modal } from "@/components/ui/Modal";
+import { Pagination, PAGE_SIZE_OPTIONS } from "@/components/ui/Pagination";
+import { ProviderBadge } from "@/components/ui/ProviderBadge";
+import { inputClass } from "@/components/ui/styles";
+import { DataTable, type Column } from "@/components/table/DataTable";
 
 export function meta() {
   return [{ title: "회원 관리 - IInfoDX Admin" }];
 }
 
-/*
-provider 값 → 화면 표기. 목록에 없는 provider는 원문 그대로 노출한다.
-*/
-const PROVIDER_LABELS: Record<string, string> = {
-  google: "Google",
-  email: "이메일",
-};
-
-const PLATFORM_OPTIONS = [
-  { value: "전체", label: "전체" },
-  { value: "google", label: "Google" },
-  { value: "email", label: "이메일" },
-] as const;
-
 const ACTIVE_OPTIONS = ["전체", "활성", "정지"] as const;
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;
 
 /*
 정지 기간 선택지.
@@ -67,14 +62,6 @@ function formatKoreanDateTime(d: Date) {
   return `${d.getFullYear()}년 ${pad2(d.getMonth() + 1)}월 ${pad2(d.getDate())}일 ${formatTimeOfDay(d)}`;
 }
 
-const inputClass =
-  "w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10";
-
-function formatDate(iso?: string | null) {
-  if (!iso) return "-";
-  return iso.slice(0, 10);
-}
-
 /*
 로컬 시각 기준 "YYYY-MM-DD HH:mm" 표기. (정지 해제 예정 일시 노출용)
 */
@@ -106,9 +93,9 @@ function BannedBadge({
       }}
       onMouseLeave={() => setPos(null)}
     >
-      <span className="inline-flex cursor-help items-center rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-600">
+      <Badge color="red" className="cursor-help">
         정지
-      </span>
+      </Badge>
       {pos && (
         <span
           className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-lg bg-gray-900 px-3 py-2 text-xs text-white shadow-lg"
@@ -127,38 +114,6 @@ function BannedBadge({
         </span>
       )}
     </span>
-  );
-}
-
-function SkeletonRows({ count }: { count: number }) {
-  return (
-    <>
-      {Array.from({ length: count }, (_, i) => (
-        <tr key={i} className="animate-pulse">
-          <td className="w-12 px-5 py-3.5">
-            <div className="h-4 w-4 rounded bg-gray-100" />
-          </td>
-          <td className="px-4 py-3.5">
-            <div className="h-4 w-6 rounded bg-gray-100" />
-          </td>
-          <td className="px-4 py-3.5">
-            <div className="h-4 w-44 rounded bg-gray-100" />
-          </td>
-          <td className="px-4 py-3.5">
-            <div className="h-5 w-16 rounded-full bg-gray-100" />
-          </td>
-          <td className="px-4 py-3.5">
-            <div className="h-4 w-20 rounded bg-gray-100" />
-          </td>
-          <td className="px-4 py-3.5">
-            <div className="h-4 w-20 rounded bg-gray-100" />
-          </td>
-          <td className="px-4 py-3.5">
-            <div className="h-5 w-12 rounded-full bg-gray-100" />
-          </td>
-        </tr>
-      ))}
-    </>
   );
 }
 
@@ -199,7 +154,6 @@ export default function Members() {
 
   const filtered = data?.users ?? [];
   const total = data?.total ?? 0;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const banMutation = useBanUserMutation();
   const unbanMutation = useUnbanUserMutation();
@@ -316,6 +270,76 @@ export default function Members() {
     setSelectedIds(new Set());
   }
 
+  const columns: Column<UserSummary>[] = [
+    {
+      key: "select",
+      header: (
+        <input
+          type="checkbox"
+          checked={allSelected}
+          onChange={toggleAll}
+          className="rounded border-gray-300 accent-gray-900 cursor-pointer"
+        />
+      ),
+      headerClassName: "w-12 px-5 py-3 text-left",
+      cellClassName: "w-12 px-5 py-3.5",
+      skeleton: <div className="h-4 w-4 rounded bg-gray-100" />,
+      cell: (member) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.has(member.id)}
+          onChange={() => toggleOne(member.id)}
+          className="rounded border-gray-300 accent-gray-900 cursor-pointer"
+        />
+      ),
+    },
+    {
+      key: "no",
+      header: "No",
+      cellClassName: "px-4 py-3.5 text-gray-400 tabular-nums",
+      skeleton: <div className="h-4 w-6 rounded bg-gray-100" />,
+      cell: (_member, idx) => (page - 1) * pageSize + idx + 1,
+    },
+    {
+      key: "email",
+      header: "이메일",
+      cellClassName: "px-4 py-3.5 font-medium text-gray-900",
+      skeleton: <div className="h-4 w-44 rounded bg-gray-100" />,
+      cell: (member) => member.email ?? "-",
+    },
+    {
+      key: "provider",
+      header: "플랫폼",
+      skeleton: <div className="h-5 w-16 rounded-full bg-gray-100" />,
+      cell: (member) => <ProviderBadge provider={member.provider} />,
+    },
+    {
+      key: "created",
+      header: "가입일",
+      cellClassName: "px-4 py-3.5 text-gray-500 tabular-nums",
+      skeleton: <div className="h-4 w-20 rounded bg-gray-100" />,
+      cell: (member) => formatDate(member.created_at),
+    },
+    {
+      key: "last",
+      header: "최근 로그인",
+      cellClassName: "px-4 py-3.5 text-gray-500 tabular-nums",
+      skeleton: <div className="h-4 w-20 rounded bg-gray-100" />,
+      cell: (member) => formatDate(member.last_sign_in_at),
+    },
+    {
+      key: "status",
+      header: "활성 여부",
+      skeleton: <div className="h-5 w-12 rounded-full bg-gray-100" />,
+      cell: (member) =>
+        member.is_banned ? (
+          <BannedBadge reason={member.ban_reason} until={member.ban_until} />
+        ) : (
+          <Badge color="green">활성</Badge>
+        ),
+    },
+  ];
+
   return (
     <div className="p-8">
       <h1 className="text-[2rem] font-semibold text-gray-900 mb-6">
@@ -323,318 +347,123 @@ export default function Members() {
       </h1>
 
       {/* 필터 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
-        <div className="grid grid-cols-3 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">이메일</label>
-            <input
-              type="text"
-              value={emailFilter}
-              onChange={(e) =>
-                handleFilterChange(setEmailFilter, e.target.value)
-              }
-              placeholder="example@example.com"
-              className={inputClass}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">플랫폼</label>
-            <select
-              value={platformFilter}
-              onChange={(e) =>
-                handleFilterChange(setPlatformFilter, e.target.value)
-              }
-              className={inputClass + " cursor-pointer"}
-            >
-              {PLATFORM_OPTIONS.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-gray-700">
-              활성 여부
-            </label>
-            <select
-              value={activeFilter}
-              onChange={(e) =>
-                handleFilterChange(setActiveFilter, e.target.value)
-              }
-              className={inputClass + " cursor-pointer"}
-            >
-              {ACTIVE_OPTIONS.map((o) => (
-                <option key={o} value={o}>
-                  {o}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
+      <FilterCard>
+        <Field label="이메일">
+          <input
+            type="text"
+            value={emailFilter}
+            onChange={(e) => handleFilterChange(setEmailFilter, e.target.value)}
+            placeholder="example@example.com"
+            className={inputClass}
+          />
+        </Field>
+        <Field label="플랫폼">
+          <select
+            value={platformFilter}
+            onChange={(e) =>
+              handleFilterChange(setPlatformFilter, e.target.value)
+            }
+            className={inputClass + " cursor-pointer"}
+          >
+            {PLATFORM_OPTIONS.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="활성 여부">
+          <select
+            value={activeFilter}
+            onChange={(e) => handleFilterChange(setActiveFilter, e.target.value)}
+            className={inputClass + " cursor-pointer"}
+          >
+            {ACTIVE_OPTIONS.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </FilterCard>
 
       {/* 테이블 카드 */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* 액션 바 */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <div>
-            <p className="text-sm text-gray-500">
-              총 <span className="font-semibold text-gray-900">{total}</span>명
-              {selectedIds.size > 0 && (
-                <span className="ml-2 text-gray-400">
-                  ({selectedIds.size}명 선택됨)
-                </span>
-              )}
-            </p>
-            <p className="mt-0.5 text-xs text-gray-400">
-              '정지' 표시에 마우스를 가져다 대면 정지 사유와 해제 예정일을
-              확인할 수 있습니다.
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={openBanModal}
-              disabled={selectedIds.size === 0 || isMutating}
-              className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {banMutation.isPending ? "정지 처리 중…" : "정지 처리"}
-            </button>
-            <button
-              onClick={handleUnban}
-              disabled={selectedIds.size === 0 || isMutating}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {unbanMutation.isPending ? "정지 해제 중…" : "정지 해제"}
-            </button>
-          </div>
-        </div>
-
-        {/* 테이블 */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="w-12 px-5 py-3 text-left">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleAll}
-                    className="rounded border-gray-300 accent-gray-900 cursor-pointer"
-                  />
-                </th>
-                {[
-                  "No",
-                  "이메일",
-                  "플랫폼",
-                  "가입일",
-                  "최근 로그인",
-                  "활성 여부",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap"
-                  >
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {isPending ? (
-                <SkeletonRows count={pageSize} />
-              ) : isError ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-6 py-16 text-center text-red-500"
-                  >
-                    회원 목록을 불러오지 못했습니다.
-                  </td>
-                </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-6 py-16 text-center text-gray-400"
-                  >
-                    검색 결과가 없습니다.
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((member: UserSummary, idx) => (
-                  <tr
-                    key={member.id}
-                    className={`transition-colors hover:bg-gray-50/70 ${
-                      selectedIds.has(member.id) ? "bg-blue-50/40" : ""
-                    }`}
-                  >
-                    <td className="w-12 px-5 py-3.5">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(member.id)}
-                        onChange={() => toggleOne(member.id)}
-                        className="rounded border-gray-300 accent-gray-900 cursor-pointer"
-                      />
-                    </td>
-                    <td className="px-4 py-3.5 text-gray-400 tabular-nums">
-                      {(page - 1) * pageSize + idx + 1}
-                    </td>
-                    <td className="px-4 py-3.5 font-medium text-gray-900">
-                      {member.email ?? "-"}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-700">
-                        {member.provider
-                          ? (PROVIDER_LABELS[member.provider] ??
-                            member.provider)
-                          : "-"}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-gray-500 tabular-nums">
-                      {formatDate(member.created_at)}
-                    </td>
-                    <td className="px-4 py-3.5 text-gray-500 tabular-nums">
-                      {formatDate(member.last_sign_in_at)}
-                    </td>
-                    <td className="px-4 py-3.5">
-                      {member.is_banned ? (
-                        <BannedBadge
-                          reason={member.ban_reason}
-                          until={member.ban_until}
-                        />
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-green-50 px-2.5 py-1 text-xs font-semibold text-green-700">
-                          활성
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* 페이지네이션 */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span>페이지당</span>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                changePage(1);
-              }}
-              className="rounded-lg border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-sm outline-none focus:border-gray-900 cursor-pointer"
-            >
-              {PAGE_SIZE_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <span>개</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <span>
-              {total === 0
-                ? "0개"
-                : `${(page - 1) * pageSize + 1}–${Math.min(page * pageSize, total)} / 총 ${total}개`}
-            </span>
-            <div className="flex items-center gap-1">
+      <DataTable
+        columns={columns}
+        data={filtered}
+        rowKey={(member) => member.id}
+        isLoading={isPending}
+        isError={isError}
+        skeletonRows={pageSize}
+        errorMessage="회원 목록을 불러오지 못했습니다."
+        rowClassName={(member) =>
+          selectedIds.has(member.id) ? "bg-blue-50/40" : ""
+        }
+        toolbar={
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <div>
+              <p className="text-sm text-gray-500">
+                총 <span className="font-semibold text-gray-900">{total}</span>명
+                {selectedIds.size > 0 && (
+                  <span className="ml-2 text-gray-400">
+                    ({selectedIds.size}명 선택됨)
+                  </span>
+                )}
+              </p>
+              <p className="mt-0.5 text-xs text-gray-400">
+                '정지' 표시에 마우스를 가져다 대면 정지 사유와 해제 예정일을
+                확인할 수 있습니다.
+              </p>
+            </div>
+            <div className="flex gap-2">
               <button
-                onClick={() => changePage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="rounded-lg border border-gray-200 w-8 h-8 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={openBanModal}
+                disabled={selectedIds.size === 0 || isMutating}
+                className="rounded-lg bg-red-500 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-red-600 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                ‹
+                {banMutation.isPending ? "정지 처리 중…" : "정지 처리"}
               </button>
-              <span className="px-3 py-1 text-sm font-medium text-gray-700">
-                {page} / {totalPages}
-              </span>
               <button
-                onClick={() => changePage(Math.min(totalPages, page + 1))}
-                disabled={page >= totalPages}
-                className="rounded-lg border border-gray-200 w-8 h-8 flex items-center justify-center text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={handleUnban}
+                disabled={selectedIds.size === 0 || isMutating}
+                className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                ›
+                {unbanMutation.isPending ? "정지 해제 중…" : "정지 해제"}
               </button>
             </div>
           </div>
-        </div>
-      </div>
+        }
+        footer={
+          <Pagination
+            page={page}
+            pageSize={pageSize}
+            total={total}
+            onPageChange={changePage}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              changePage(1);
+            }}
+            pageSizeOptions={PAGE_SIZE_OPTIONS}
+          />
+        }
+      />
 
       {/* 정지 처리 모달 */}
       {banModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 p-4"
-          onClick={() => !banMutation.isPending && setBanModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h2 className="text-lg font-semibold text-gray-900">정지 처리</h2>
-            <p className="mt-1 text-sm text-gray-500">
+        <Modal
+          onClose={() => setBanModalOpen(false)}
+          closeDisabled={banMutation.isPending}
+          title="정지 처리"
+          description={
+            <>
               <span className="font-semibold text-gray-900">
                 {banTargets.length}
               </span>
               명을 정지 처리합니다.
-            </p>
-
-            <div className="mt-5 flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-700">
-                정지 사유
-              </label>
-              <textarea
-                value={banReason}
-                onChange={(e) => setBanReason(e.target.value)}
-                placeholder="정지 사유를 입력하세요."
-                rows={3}
-                autoFocus
-                className={inputClass + " resize-none"}
-              />
-            </div>
-
-            <div className="mt-4 flex flex-col gap-1.5">
-              <label className="text-sm font-medium text-gray-700">
-                정지 기간
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {BAN_DURATION_OPTIONS.map((o) => (
-                  <button
-                    key={o.value}
-                    type="button"
-                    onClick={() => setBanDuration(o.value)}
-                    className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition-all ${
-                      banDuration === o.value
-                        ? "border-gray-900 bg-gray-900 text-white"
-                        : "border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    {o.label}
-                  </button>
-                ))}
-              </div>
-              {banDuration === "custom" && (
-                <input
-                  type="date"
-                  value={banUntilDate}
-                  min={localDateAfter(1)}
-                  onChange={(e) => setBanUntilDate(e.target.value)}
-                  className={inputClass + " mt-2 cursor-pointer"}
-                />
-              )}
-              {banDuration !== "permanent" && banReleaseDate && (
-                <p className="text-xs text-gray-400">
-                  {formatKoreanDateTime(banReleaseDate)}에 정지가 해제됩니다.
-                </p>
-              )}
-            </div>
-
-            <div className="mt-6 flex justify-end gap-2">
+            </>
+          }
+          footer={
+            <>
               <button
                 onClick={() => setBanModalOpen(false)}
                 disabled={banMutation.isPending}
@@ -649,9 +478,59 @@ export default function Members() {
               >
                 {banMutation.isPending ? "정지 처리 중…" : "정지 처리"}
               </button>
-            </div>
+            </>
+          }
+        >
+          <div className="mt-5 flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-gray-700">
+              정지 사유
+            </label>
+            <textarea
+              value={banReason}
+              onChange={(e) => setBanReason(e.target.value)}
+              placeholder="정지 사유를 입력하세요."
+              rows={3}
+              autoFocus
+              className={inputClass + " resize-none"}
+            />
           </div>
-        </div>
+
+          <div className="mt-4 flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-gray-700">
+              정지 기간
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {BAN_DURATION_OPTIONS.map((o) => (
+                <button
+                  key={o.value}
+                  type="button"
+                  onClick={() => setBanDuration(o.value)}
+                  className={`rounded-lg border px-3.5 py-2 text-sm font-medium transition-all ${
+                    banDuration === o.value
+                      ? "border-gray-900 bg-gray-900 text-white"
+                      : "border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            {banDuration === "custom" && (
+              <input
+                type="date"
+                value={banUntilDate}
+                min={localDateAfter(1)}
+                onChange={(e) => setBanUntilDate(e.target.value)}
+                className={inputClass + " mt-2 cursor-pointer"}
+              />
+            )}
+            {banDuration !== "permanent" && banReleaseDate && (
+              <p className="text-xs text-gray-400">
+                {formatKoreanDateTime(banReleaseDate)}에 정지가 해제됩니다.
+              </p>
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   );
