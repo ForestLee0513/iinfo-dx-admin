@@ -16,6 +16,7 @@ import {
 
 import type { Route } from "./+types/login";
 import { startOAuthLogin, useEmailLoginMutation } from "@/api/auth/requests";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -49,6 +50,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-muted flex items-center justify-center px-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-2">
