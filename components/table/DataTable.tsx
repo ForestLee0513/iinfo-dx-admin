@@ -1,10 +1,21 @@
 import type { ReactNode } from "react";
+import {
+  Card,
+  CardContent,
+  Skeleton,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@forestlee0513/iinfo-dx-design-system";
 
 /*
 테이블 컬럼 정의.
 - header: 헤더 셀 내용
 - cell: 행/인덱스를 받아 셀 내용을 렌더
-- headerClassName/cellClassName: 지정 시 기본 클래스를 대체한다
+- headerClassName/cellClassName: 지정 시 셀에 추가로 붙인다 (정렬·포맷 등 콘텐츠 성격의 클래스만)
 - skeleton: 로딩 스켈레톤 셀에 넣을 placeholder (미지정 시 기본 막대)
 */
 export type Column<T> = {
@@ -16,10 +27,7 @@ export type Column<T> = {
   skeleton?: ReactNode;
 };
 
-const DEFAULT_HEADER_CLASS =
-  "px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap first:px-5";
-const DEFAULT_CELL_CLASS = "px-4 py-3.5";
-const DEFAULT_SKELETON = <div className="h-4 w-16 rounded bg-gray-100" />;
+const DEFAULT_SKELETON = <Skeleton className="h-4 w-16 rounded" />;
 
 /*
 목록 화면 공통 테이블 카드. 상단 toolbar / 테이블 / 하단 footer로 구성되며,
@@ -53,79 +61,65 @@ export function DataTable<T>({
   const colSpan = columns.length;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <Card>
       {toolbar}
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-100">
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className={col.headerClassName ?? DEFAULT_HEADER_CLASS}
-                >
+                <TableHead key={col.key} className={col.headerClassName}>
                   {col.header}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {isLoading ? (
               Array.from({ length: skeletonRows }, (_, i) => (
-                <tr key={i} className="animate-pulse">
+                <TableRow key={i}>
                   {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      className={col.cellClassName ?? DEFAULT_CELL_CLASS}
-                    >
+                    <TableCell key={col.key} className={col.cellClassName}>
                       {col.skeleton ?? DEFAULT_SKELETON}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             ) : isError ? (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={colSpan}
-                  className="px-6 py-16 text-center text-red-500"
+                  className="py-16 text-center text-destructive"
                 >
                   {errorMessage}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : data.length === 0 ? (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={colSpan}
-                  className="px-6 py-16 text-center text-gray-400"
+                  className="py-16 text-center text-muted-foreground"
                 >
                   {emptyMessage}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               data.map((row, idx) => (
-                <tr
-                  key={rowKey(row)}
-                  className={`transition-colors hover:bg-gray-50/70 ${
-                    rowClassName?.(row) ?? ""
-                  }`}
-                >
+                <TableRow key={rowKey(row)} className={rowClassName?.(row)}>
                   {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      className={col.cellClassName ?? DEFAULT_CELL_CLASS}
-                    >
+                    <TableCell key={col.key} className={col.cellClassName}>
                       {col.cell(row, idx)}
-                    </td>
+                    </TableCell>
                   ))}
-                </tr>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
-      </div>
+          </TableBody>
+        </Table>
+      </CardContent>
 
       {footer}
-    </div>
+    </Card>
   );
 }

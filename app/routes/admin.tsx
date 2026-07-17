@@ -2,6 +2,30 @@ import { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Avatar,
+  AvatarFallback,
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+  Separator,
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  Skeleton,
+} from "@forestlee0513/iinfo-dx-design-system";
+
+import {
   authKeys,
   useLogoutMutation,
   useMyInfoQuery,
@@ -37,43 +61,44 @@ const NAV_ITEMS: NavItem[] = [
 
 function AdminLayoutSkeleton() {
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside className="w-60 flex-shrink-0 bg-[#3749a6] flex flex-col">
-        <div className="px-8 py-7">
-          <div className="h-6 w-24 rounded bg-white/20 animate-pulse" />
-        </div>
-        <nav className="flex-1 flex flex-col gap-1 px-8 py-1">
-          {Array.from({ length: 4 }, (_, i) => (
-            <div
-              key={i}
-              className="my-3 h-4 w-28 rounded bg-white/15 animate-pulse"
-            />
-          ))}
-        </nav>
-        <div className="border-t border-white/15 px-8 py-6 flex flex-col gap-6">
-          <div className="h-4 w-12 rounded bg-white/15 animate-pulse" />
-          <div className="h-4 w-16 rounded bg-white/15 animate-pulse" />
-        </div>
-      </aside>
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <Skeleton className="h-6 w-24 rounded" />
+        </SidebarHeader>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              {Array.from({ length: 4 }, (_, i) => (
+                <Skeleton key={i} className="h-8 w-full rounded-xl" />
+              ))}
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
+        <SidebarFooter>
+          <Skeleton className="h-4 w-12 rounded" />
+          <Skeleton className="h-4 w-16 rounded" />
+        </SidebarFooter>
+      </Sidebar>
 
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-        <header className="h-[70px] flex-shrink-0 bg-white border-b border-gray-100 flex items-center justify-end px-8">
+      <SidebarInset>
+        <header className="h-[70px] flex-shrink-0 bg-background flex items-center justify-end px-8">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full bg-gray-100 animate-pulse" />
+            <Skeleton className="w-9 h-9 rounded-full" />
             <div className="flex flex-col gap-1.5">
-              <div className="h-3.5 w-40 rounded bg-gray-100 animate-pulse" />
-              <div className="h-3 w-12 rounded bg-gray-100 animate-pulse" />
+              <Skeleton className="h-3.5 w-40 rounded" />
+              <Skeleton className="h-3 w-12 rounded" />
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-hidden p-8">
-          <div className="h-8 w-36 rounded bg-gray-200 mb-6 animate-pulse" />
-          <div className="h-24 rounded-2xl bg-white border border-gray-100 mb-5 animate-pulse" />
-          <div className="h-96 rounded-2xl bg-white border border-gray-100 animate-pulse" />
+        <main className="flex-1 overflow-auto p-8">
+          <Skeleton className="h-8 w-36 rounded mb-6" />
+          <Skeleton className="h-24 rounded-2xl mb-5" />
+          <Skeleton className="h-96 rounded-2xl" />
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 
@@ -154,69 +179,76 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <aside className="w-60 flex-shrink-0 bg-[#3749a6] flex flex-col">
-        <div className="px-8 py-7">
-          <span className="text-xl font-extrabold text-white tracking-tight">
+    <SidebarProvider>
+      <Sidebar>
+        <SidebarHeader>
+          <span className="px-2 text-xl font-extrabold tracking-tight">
             IInfo DX
           </span>
-        </div>
+        </SidebarHeader>
 
-        <nav className="flex-1 flex flex-col">
-          {visibleNavItems.map(({ to, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) =>
-                `flex items-center px-8 py-3.5 text-sm font-semibold transition-colors ${
-                  isActive
-                    ? "bg-white/15 text-white"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
-                }`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {visibleNavItems.map(({ to, label }) => (
+                  <SidebarMenuItem key={to}>
+                    <SidebarMenuButton
+                      isActive={isPathUnderNav(location.pathname, to)}
+                      render={<NavLink to={to}>{label}</NavLink>}
+                    />
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </SidebarContent>
 
-        <div className="border-t border-white/15 py-3">
-          <button className="w-full text-left px-8 py-3.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white transition-colors">
-            설정
-          </button>
-          <button
-            onClick={handleLogout}
-            disabled={logout.isPending}
-            className="w-full text-left px-8 py-3.5 text-sm font-semibold text-white/70 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
-          >
-            {logout.isPending ? "로그아웃 중…" : "로그아웃"}
-          </button>
-        </div>
-      </aside>
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton>설정</SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={handleLogout}
+                disabled={logout.isPending}
+              >
+                {logout.isPending ? "로그아웃 중…" : "로그아웃"}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
 
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-        <header className="h-[70px] flex-shrink-0 bg-white border-b border-gray-100 flex items-center justify-end px-8">
+      <SidebarInset>
+        <header className="h-[70px] flex-shrink-0 bg-background flex items-center justify-between px-8">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger />
+            <Separator orientation="vertical" />
+          </div>
+
           {me && (
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-[#3749a6]/10 flex items-center justify-center text-sm font-bold text-[#3749a6]">
-                {me.email.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-800 leading-tight">
-                  {me.email}
-                </p>
-                <p className="text-xs font-semibold text-gray-500 leading-tight">
-                  Admin
-                </p>
-              </div>
-            </div>
+            <Item size="sm">
+              <ItemMedia>
+                <Avatar>
+                  <AvatarFallback>
+                    {me.email.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>{me.email}</ItemTitle>
+                <ItemDescription>Admin</ItemDescription>
+              </ItemContent>
+            </Item>
           )}
         </header>
 
         <main className="flex-1 overflow-auto">
           <Outlet />
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

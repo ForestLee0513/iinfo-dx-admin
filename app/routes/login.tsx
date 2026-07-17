@@ -1,5 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+  Input,
+} from "@forestlee0513/iinfo-dx-design-system";
+
 import type { Route } from "./+types/login";
 import { startOAuthLogin, useEmailLoginMutation } from "@/api/auth/requests";
 
@@ -34,101 +48,81 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <p className="text-xs font-semibold tracking-widest text-gray-400 uppercase mb-2">
+          <p className="text-xs font-semibold tracking-widest text-muted-foreground uppercase mb-2">
             Admin Console
           </p>
-          <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-            IInfoDX
-          </h1>
+          <h1 className="text-2xl font-semibold tracking-tight">IInfoDX</h1>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-8 py-8">
-          {oauthError && (
-            <div className="mb-5 rounded-lg bg-red-50 border border-red-100 px-4 py-3">
-              <p className="text-sm text-red-600">{oauthError}</p>
-            </div>
-          )}
-
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              emailLogin.mutate(
-                { email, password },
-                { onSuccess: () => navigate("/members") },
-              );
-            }}
-            className="flex flex-col gap-5"
-          >
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="email"
-                className="text-sm font-medium text-gray-700"
-              >
-                이메일
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                autoComplete="email"
-                required
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label
-                htmlFor="password"
-                className="text-sm font-medium text-gray-700"
-              >
-                비밀번호
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                required
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 outline-none transition-all focus:bg-white focus:border-gray-900 focus:ring-2 focus:ring-gray-900/10"
-              />
-            </div>
-
-            {emailLogin.isError && (
-              <p className="text-sm text-red-500">
-                이메일 또는 비밀번호가 올바르지 않습니다.
-              </p>
+        <Card>
+          <CardContent className="flex flex-col gap-5">
+            {oauthError && (
+              <Alert variant="destructive">
+                <AlertDescription>{oauthError}</AlertDescription>
+              </Alert>
             )}
 
-            <button
-              type="submit"
-              disabled={emailLogin.isPending}
-              className="mt-1 w-full cursor-pointer rounded-lg bg-gray-900 py-2.5 text-sm font-medium text-white transition-all hover:bg-gray-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                emailLogin.mutate(
+                  { email, password },
+                  { onSuccess: () => navigate("/members") },
+                );
+              }}
             >
-              {emailLogin.isPending ? "로그인 중…" : "로그인"}
-            </button>
-          </form>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="email">이메일</FieldLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@example.com"
+                    autoComplete="email"
+                    required
+                  />
+                </Field>
 
-          <div className="flex items-center gap-3 my-6">
-            <div className="h-px flex-1 bg-gray-100" />
-            <span className="text-xs text-gray-400">또는</span>
-            <div className="h-px flex-1 bg-gray-100" />
-          </div>
+                <Field>
+                  <FieldLabel htmlFor="password">비밀번호</FieldLabel>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                  {emailLogin.isError && (
+                    <FieldError>
+                      이메일 또는 비밀번호가 올바르지 않습니다.
+                    </FieldError>
+                  )}
+                </Field>
 
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            className="flex w-full cursor-pointer items-center justify-center gap-2.5 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-all hover:bg-gray-50 active:scale-[0.98]"
-          >
-            <GoogleIcon />
-            Google 계정으로 로그인
-          </button>
-        </div>
+                <Button type="submit" disabled={emailLogin.isPending}>
+                  {emailLogin.isPending ? "로그인 중…" : "로그인"}
+                </Button>
+
+                <FieldSeparator>또는</FieldSeparator>
+
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGoogleLogin}
+                >
+                  <GoogleIcon />
+                  Google 계정으로 로그인
+                </Button>
+              </FieldGroup>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -22,3 +22,25 @@ export function isRole(
 ): boolean {
   return role === target;
 }
+
+/*
+Badge 컴포넌트의 variant prop과 동일한 값. 커스텀 색상 없이 디자인 시스템
+토큰(variant)만으로 배지 색을 구분한다.
+*/
+export type BadgeVariant =
+  "default" | "secondary" | "destructive" | "outline" | "ghost" | "link";
+
+/*
+역할(AuthMemberRole) → 화면 표기 라벨/배지 variant. 회원 상세·권한 관리 화면이 공유한다.
+*/
+export const ROLE_LABELS: Record<AuthMemberRole, string> = {
+  USER: "일반 회원",
+  ADMIN: "관리자",
+  SUPER_ADMIN: "최고 관리자",
+};
+
+export const ROLE_BADGE_VARIANT: Record<AuthMemberRole, BadgeVariant> = {
+  USER: "secondary",
+  ADMIN: "default",
+  SUPER_ADMIN: "destructive",
+};

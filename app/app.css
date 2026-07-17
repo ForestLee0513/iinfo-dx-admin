@@ -1,4 +1,7 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "@forestlee0513/iinfo-dx-design-system/styles.css";
+@import "@forestlee0513/iinfo-dx-design-system/theme.css";
 
 /* 일본어 unicode-range — PretendardJP로 렌더링 */
 @font-face {
@@ -7,8 +10,9 @@
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+3000-303F, U+3040-309F, U+30A0-30FF, U+FF00-FFEF,
-    U+4E00-9FFF, U+3400-4DBF, U+20000-2A6DF;
+  unicode-range:
+    U+3000-303F, U+3040-309F, U+30A0-30FF, U+FF00-FFEF, U+4E00-9FFF,
+    U+3400-4DBF, U+20000-2A6DF;
 }
 
 /* 한글·Latin — PretendardVariable */
@@ -18,15 +22,4 @@
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
-}
-
-@theme {
-  --font-sans: "Pretendard", ui-sans-serif, system-ui, sans-serif;
-}
-
-/* 어드민은 라이트 테마 고정 — 시스템 다크모드가 네이티브 컨트롤(input·select·스크롤바)에 적용되지 않도록 한다. */
-html,
-body {
-  @apply bg-white;
-  color-scheme: light;
 }

@@ -7,6 +7,8 @@ import {
   ScrollRestoration,
 } from "react-router";
 
+import { TooltipProvider } from "@forestlee0513/iinfo-dx-design-system";
+
 import type { Route } from "./+types/root";
 import { QueryProvider } from "@/providers/QueryProvider";
 import "./app.css";
@@ -34,7 +36,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <QueryProvider>
-      <Outlet />
+      <TooltipProvider>
+        <Outlet />
+      </TooltipProvider>
     </QueryProvider>
   );
 }
