@@ -69,7 +69,7 @@ function AdminLayoutSkeleton() {
         </SidebarHeader>
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupContent>
+            <SidebarGroupContent className="flex flex-col gap-2">
               {Array.from({ length: 4 }, (_, i) => (
                 <Skeleton key={i} className="h-8 w-full rounded-xl" />
               ))}
