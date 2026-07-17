@@ -11,6 +11,8 @@ import { TooltipProvider } from "@forestlee0513/iinfo-dx-design-system";
 
 import type { Route } from "./+types/root";
 import { QueryProvider } from "@/providers/QueryProvider";
+import { ThemeProvider } from "@/providers/ThemeProvider";
+import { themeInitScript } from "@/lib/theme";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [];
@@ -23,6 +25,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <Meta />
         <Links />
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body>
         {children}
@@ -36,9 +39,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <QueryProvider>
-      <TooltipProvider>
-        <Outlet />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Outlet />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryProvider>
   );
 }

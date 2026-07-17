@@ -34,6 +34,7 @@ import { AUTH_MEMBER_ROLE } from "@/api/auth/constants";
 import { canAccessAdmin } from "@/api/auth/roles";
 import { setAuthErrorCallback } from "@/lib/axios";
 import type { AuthMemberRole } from "@/api/auth/types";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /*
 사이드바 메뉴 정의.
@@ -82,7 +83,8 @@ function AdminLayoutSkeleton() {
       </Sidebar>
 
       <SidebarInset>
-        <header className="h-[70px] flex-shrink-0 bg-background flex items-center justify-end px-8">
+        <header className="h-[70px] flex-shrink-0 bg-background flex items-center justify-end gap-3 px-8">
+          <ThemeToggle />
           <div className="flex items-center gap-3">
             <Skeleton className="w-9 h-9 rounded-full" />
             <div className="flex flex-col gap-1.5">
@@ -207,9 +209,6 @@ export default function AdminLayout() {
         <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton>설정</SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
               <SidebarMenuButton
                 onClick={handleLogout}
                 disabled={logout.isPending}
@@ -228,21 +227,24 @@ export default function AdminLayout() {
             <Separator orientation="vertical" />
           </div>
 
-          {me && (
-            <Item size="sm">
-              <ItemMedia>
-                <Avatar>
-                  <AvatarFallback>
-                    {me.email.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>{me.email}</ItemTitle>
-                <ItemDescription>Admin</ItemDescription>
-              </ItemContent>
-            </Item>
-          )}
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            {me && (
+              <Item size="sm">
+                <ItemMedia>
+                  <Avatar>
+                    <AvatarFallback>
+                      {me.email.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                </ItemMedia>
+                <ItemContent>
+                  <ItemTitle>{me.email}</ItemTitle>
+                  <ItemDescription>Admin</ItemDescription>
+                </ItemContent>
+              </Item>
+            )}
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto">
