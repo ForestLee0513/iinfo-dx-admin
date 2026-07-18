@@ -50,6 +50,7 @@ export function Pagination({
         <span>페이지당</span>
         <Select
           value={String(pageSize)}
+          items={pageSizeOptions.map((s) => ({ value: String(s), label: String(s) }))}
           onValueChange={(value) => {
             if (value !== null) onPageSizeChange(Number(value));
           }}

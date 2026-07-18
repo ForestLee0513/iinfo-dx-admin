@@ -22,6 +22,7 @@ export function Modal({
   description,
   footer,
   children,
+  className,
 }: {
   onClose: () => void;
   closeDisabled?: boolean;
@@ -29,6 +30,7 @@ export function Modal({
   description?: ReactNode;
   footer?: ReactNode;
   children?: ReactNode;
+  className?: string; // 기본 max-w-md보다 넓혀야 할 때(표가 넓은 모달 등) 오버라이드
 }) {
   return (
     <Dialog
@@ -37,7 +39,7 @@ export function Modal({
         if (!open && !closeDisabled) onClose();
       }}
     >
-      <DialogContent showCloseButton={!closeDisabled}>
+      <DialogContent showCloseButton={!closeDisabled} className={className}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}

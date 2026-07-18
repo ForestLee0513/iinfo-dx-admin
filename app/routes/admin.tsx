@@ -56,7 +56,6 @@ const NAV_ITEMS: NavItem[] = [
     roles: [AUTH_MEMBER_ROLE.SUPER_ADMIN],
   },
   { to: "/crawling", label: "크롤링 관리" },
-  { to: "/crawling-history", label: "크롤링 내역" },
   { to: "/ranking", label: "서열표 관리" },
 ];
 

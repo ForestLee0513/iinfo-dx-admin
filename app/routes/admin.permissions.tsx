@@ -243,6 +243,7 @@ export default function Permissions() {
           <Field label="플랫폼">
             <Select
               value={platformFilter}
+              items={PLATFORM_OPTIONS}
               onValueChange={(value) => {
                 if (value !== null) handleFilterChange(setPlatformFilter, value);
               }}

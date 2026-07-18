@@ -6,5 +6,6 @@ export default [
     route("members", "routes/admin.members.tsx"),
     route("members/:userId", "routes/admin.members.$userId.tsx"),
     route("permissions", "routes/admin.permissions.tsx"),
+    route("crawling", "routes/admin.crawling.tsx"),
   ]),
 ] satisfies RouteConfig;

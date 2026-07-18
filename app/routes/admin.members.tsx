@@ -53,6 +53,7 @@ export function meta() {
 }
 
 const ACTIVE_OPTIONS = ["전체", "활성", "정지"] as const;
+const ACTIVE_SELECT_ITEMS = ACTIVE_OPTIONS.map((o) => ({ value: o, label: o }));
 
 /*
 정지 배지. 마우스를 올리면 정지 사유와 해제 예정일을 툴팁으로 보여준다.
@@ -340,6 +341,7 @@ export default function Members() {
           <Field label="플랫폼">
             <Select
               value={platformFilter}
+              items={PLATFORM_OPTIONS}
               onValueChange={(value) => {
                 if (value !== null) handleFilterChange(setPlatformFilter, value);
               }}
@@ -359,6 +361,7 @@ export default function Members() {
           <Field label="활성 여부">
             <Select
               value={activeFilter}
+              items={ACTIVE_SELECT_ITEMS}
               onValueChange={(value) => {
                 if (value !== null) handleFilterChange(setActiveFilter, value);
               }}
