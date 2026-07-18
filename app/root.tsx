@@ -18,8 +18,10 @@ import "./app.css";
 export const links: Route.LinksFunction = () => [];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // dark 클래스는 하이드레이션 전에 themeInitScript가 직접 붙이므로 서버 출력과
+  // 다를 수 있다 — 의도된 불일치이므로 경고를 억제한다.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
