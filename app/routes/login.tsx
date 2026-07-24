@@ -12,11 +12,17 @@ import {
   FieldLabel,
   FieldSeparator,
   Input,
+  Spinner,
 } from "@forestlee0513/iinfo-dx-design-system";
 
 import type { Route } from "./+types/login";
-import { startOAuthLogin, useEmailLoginMutation } from "@/api/auth/requests";
-import { RequiredMark } from "@/components/Field";
+import {
+  startOAuthLogin,
+  useEmailLoginMutation,
+  useMyInfoQuery,
+} from "@/api/auth/requests";
+import { canAccessAdmin } from "@/api/auth/roles";
+import { ADMIN_LANDING_PATH } from "@/app/admin-nav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function meta({}: Route.MetaArgs) {
@@ -35,6 +41,12 @@ export default function Login() {
 
   const [oauthError] = useState(() => searchParams.get("error"));
 
+  // 로그인 화면 진입 시 기존 세션을 검증한다. 인메모리 액세스 토큰은 새로고침으로
+  // 사라지지만 httpOnly refresh 쿠키가 남아 있으면 /me 요청이 401 → refresh →
+  // 재시도로 복구되므로(lib/axios.ts), 유효한 세션이면 아래 쿼리가 성공한다.
+  const { data: me, isLoading: isCheckingSession } = useMyInfoQuery();
+  const authorized = canAccessAdmin(me?.app_role);
+
   // 새로고침 시 재표시되지 않도록 URL에서 error 파라미터만 제거 (재렌더링 없이)
   useEffect(() => {
     if (oauthError) {
@@ -42,11 +54,28 @@ export default function Login() {
     }
   }, []);
 
+  // 이미 인증된 세션이면 로그인 폼을 건너뛰고 사이드바 첫 번째 페이지로 이동한다.
+  useEffect(() => {
+    if (authorized) {
+      navigate(ADMIN_LANDING_PATH, { replace: true });
+    }
+  }, [authorized, navigate]);
+
   function handleGoogleLogin() {
     startOAuthLogin({
       provider: "google",
-      redirect: `${window.location.origin}/members`,
+      redirect: `${window.location.origin}${ADMIN_LANDING_PATH}`,
     });
+  }
+
+  // 세션 검증 중이거나 인증되어 리다이렉트가 진행되는 동안에는 로그인 폼이
+  // 잠깐 노출되지 않도록 로딩 상태만 보여준다.
+  if (isCheckingSession || authorized) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <Spinner />
+      </div>
+    );
   }
 
   return (
@@ -76,16 +105,13 @@ export default function Login() {
                 e.preventDefault();
                 emailLogin.mutate(
                   { email, password },
-                  { onSuccess: () => navigate("/members") },
+                  { onSuccess: () => navigate(ADMIN_LANDING_PATH) },
                 );
               }}
             >
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="email">
-                    이메일
-                    <RequiredMark />
-                  </FieldLabel>
+                  <FieldLabel htmlFor="email">이메일</FieldLabel>
                   <Input
                     id="email"
                     type="email"
@@ -98,10 +124,7 @@ export default function Login() {
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="password">
-                    비밀번호
-                    <RequiredMark />
-                  </FieldLabel>
+                  <FieldLabel htmlFor="password">비밀번호</FieldLabel>
                   <Input
                     id="password"
                     type="password"

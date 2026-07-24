@@ -30,34 +30,10 @@ import {
   useLogoutMutation,
   useMyInfoQuery,
 } from "@/api/auth/requests";
-import { AUTH_MEMBER_ROLE } from "@/api/auth/constants";
 import { canAccessAdmin } from "@/api/auth/roles";
 import { setAuthErrorCallback } from "@/lib/axios";
-import type { AuthMemberRole } from "@/api/auth/types";
+import { ADMIN_LANDING_PATH, NAV_ITEMS } from "@/app/admin-nav";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-/*
-사이드바 메뉴 정의.
-roles를 지정하면 해당 역할에게만 노출되고, 생략하면 어드민 접근이 가능한
-모든 역할에게 노출된다. 메뉴 숨김은 UX 제어일 뿐이므로 해당 페이지의
-라우트/백엔드에서도 역할 검증이 함께 이루어져야 한다.
-*/
-type NavItem = {
-  to: string;
-  label: string;
-  roles?: readonly AuthMemberRole[];
-};
-
-const NAV_ITEMS: NavItem[] = [
-  { to: "/members", label: "회원 관리" },
-  {
-    to: "/permissions",
-    label: "권한 관리",
-    roles: [AUTH_MEMBER_ROLE.SUPER_ADMIN],
-  },
-  { to: "/crawling", label: "크롤링 관리" },
-  { to: "/ranking", label: "서열표 관리" },
-];
 
 function AdminLayoutSkeleton() {
   return (
@@ -149,7 +125,7 @@ export default function AdminLayout() {
   useEffect(() => {
     if (isLoading || isError || !authorized) return;
     if (!routeAllowed) {
-      navigate("/members", { replace: true });
+      navigate(ADMIN_LANDING_PATH, { replace: true });
     }
   }, [isLoading, isError, authorized, routeAllowed, navigate]);
 
