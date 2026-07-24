@@ -3,6 +3,17 @@
 @import "@forestlee0513/iinfo-dx-design-system/styles.css";
 @import "@forestlee0513/iinfo-dx-design-system/theme.css";
 
+/*
+Tailwind v4의 dark: variant는 기본값이 @media(prefers-color-scheme)라 OS 설정을 따른다.
+ThemeProvider가 토글하는 <html>.dark 클래스를 기준으로 삼도록 variant를 재정의한다.
+
+주의: 디자인 시스템 styles.css가 자체 Tailwind 전체 빌드라 .hidden/.block 같은 기본
+유틸을 @layer utilities에 중복 정의한다. :where()는 명시도가 0이라 dark:hidden이
+그 .hidden과 동점→소스순서로 밀려 무력화된다. 디자인 시스템과 동일하게 :is(.dark *)를
+써서 명시도를 (0,2,0)으로 올려 항상 이기게 한다.
+*/
+@custom-variant dark (&:is(.dark *));
+
 /* 일본어 unicode-range — PretendardJP로 렌더링 */
 @font-face {
   font-family: "Pretendard";

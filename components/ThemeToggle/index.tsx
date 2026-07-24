@@ -20,8 +20,8 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       suppressHydrationWarning
     >
-      <IconSun className="hidden dark:block" />
-      <IconMoon className="block dark:hidden" />
+      <IconSun className="block dark:hidden" />
+      <IconMoon className="hidden dark:block" />
     </Button>
   );
 }
