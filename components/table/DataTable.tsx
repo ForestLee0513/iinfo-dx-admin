@@ -34,6 +34,7 @@ const DEFAULT_SKELETON = <Skeleton className="h-4 w-16 rounded" />;
 로딩(스켈레톤)·에러·빈 상태를 내부에서 처리한다.
 */
 export function DataTable<T>({
+  cardClassName,
   columns,
   data,
   rowKey,
@@ -46,6 +47,7 @@ export function DataTable<T>({
   toolbar,
   footer,
 }: {
+  cardClassName?: string;
   columns: Column<T>[];
   data: T[];
   rowKey: (row: T) => string;
@@ -61,7 +63,7 @@ export function DataTable<T>({
   const colSpan = columns.length;
 
   return (
-    <Card>
+    <Card className={cardClassName ?? ""}>
       {toolbar}
 
       <CardContent>

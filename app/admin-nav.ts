@@ -24,7 +24,7 @@ export const NAV_ITEMS: NavItem[] = [
     roles: [AUTH_MEMBER_ROLE.SUPER_ADMIN],
   },
   { to: "/crawling", label: "크롤링 관리" },
-  { to: "/ranking", label: "서열표 관리" },
+  { to: "/data", label: "테이블 데이터 관리" },
 ];
 
 /*
