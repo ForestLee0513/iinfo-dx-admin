@@ -175,8 +175,9 @@ export function useUpdateUserRoleMutation() {
       ...body
     }: UserRoleUpdateRequest & { userId: string }) =>
       updateUserRole(userId, body),
-    // 역할은 상세(profile.role)에서 읽으므로 해당 사용자 상세 캐시를 무효화한다.
+    // 역할은 목록(role)과 상세(profile.role) 양쪽에서 읽으므로 함께 무효화한다.
     onSuccess: (_data, { userId }) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
       queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) });
     },
   });

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQueries } from "@tanstack/react-query";
 import {
   Badge,
   Button,
@@ -24,7 +23,6 @@ import { useMyInfoQuery } from "@/api/auth/requests";
 import { AUTH_MEMBER_ROLE } from "@/api/auth/constants";
 import { ROLE_LABELS, ROLE_BADGE_VARIANT } from "@/api/auth/roles";
 import {
-  userDetailQueryOptions,
   useUpdateUserRoleMutation,
   useUserListQuery,
 } from "@/api/users/requests";
@@ -88,17 +86,6 @@ export default function Permissions() {
   const users = data?.users ?? [];
   const total = data?.total ?? 0;
 
-  /*
-  목록 API에는 role이 없어(AdminUserSummary) 화면에 보이는 행만큼
-  상세를 병렬 조회해 profile.role을 읽는다. 상세 캐시는 역할 변경 시 무효화된다.
-  */
-  const roleQueries = useQueries({
-    queries: users.map((u) => userDetailQueryOptions(u.id)),
-  });
-  const roleById = new Map<string, AuthMemberRole | undefined>(
-    users.map((u, i) => [u.id, roleQueries[i].data?.profile.role]),
-  );
-
   const roleMutation = useUpdateUserRoleMutation();
 
   function handleFilterChange<T extends string>(
@@ -110,7 +97,7 @@ export default function Permissions() {
   }
 
   function openRoleModal(user: UserSummary) {
-    const currentRole = roleById.get(user.id) ?? AUTH_MEMBER_ROLE.USER;
+    const currentRole = user.role ?? AUTH_MEMBER_ROLE.USER;
     // 현재 역할이 부여 가능 목록에 없으면(SUPER_ADMIN 등) USER를 기본 선택으로 둔다.
     setSelectedRole(
       (ASSIGNABLE_ROLES as readonly string[]).includes(currentRole)
@@ -121,7 +108,7 @@ export default function Permissions() {
   }
 
   const targetCurrentRole = roleTarget
-    ? (roleById.get(roleTarget.id) ?? AUTH_MEMBER_ROLE.USER)
+    ? (roleTarget.role ?? AUTH_MEMBER_ROLE.USER)
     : null;
 
   const roleUnchanged = selectedRole === targetCurrentRole;
@@ -182,12 +169,8 @@ export default function Permissions() {
       header: "권한",
       skeleton: <Skeleton className="h-5 w-16 rounded-full" />,
       cell: (user) => {
-        const role = roleById.get(user.id);
-        return role ? (
-          <RoleBadge role={role} />
-        ) : (
-          <Skeleton className="inline-block h-5 w-16 rounded-full" />
-        );
+        const role = user.role ?? AUTH_MEMBER_ROLE.USER;
+        return <RoleBadge role={role} />;
       },
     },
     {
@@ -195,7 +178,7 @@ export default function Permissions() {
       header: "관리",
       skeleton: <Skeleton className="h-8 w-20 rounded-lg" />,
       cell: (user) => {
-        const role = roleById.get(user.id);
+        const role = user.role ?? AUTH_MEMBER_ROLE.USER;
         const isSelf = user.id === me?.id;
         // 본인과 최고 관리자는 API가 거부하므로 버튼도 비활성화한다.
         const changeDisabled = isSelf || role === AUTH_MEMBER_ROLE.SUPER_ADMIN;
@@ -205,7 +188,7 @@ export default function Permissions() {
             variant="outline"
             size="xs"
             onClick={() => openRoleModal(user)}
-            disabled={changeDisabled || !role}
+            disabled={changeDisabled}
             title={
               isSelf
                 ? "본인 역할은 변경할 수 없습니다."

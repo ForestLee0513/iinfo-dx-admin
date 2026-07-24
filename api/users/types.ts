@@ -18,6 +18,7 @@ export interface UserSummary {
   id: string;
   email?: string | null;
   provider?: string | null;
+  role?: AuthMemberRole; // 현재 역할 (default "USER")
   created_at: string; // ISO date-time
   last_sign_in_at?: string | null;
   is_banned: boolean;
