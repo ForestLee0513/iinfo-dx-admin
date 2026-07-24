@@ -39,7 +39,7 @@ import {
   resolveBanUntilDate,
   type BanDurationValue,
 } from "@/components/BanDurationPicker";
-import { Field } from "@/components/Field";
+import { Field, RequiredMark } from "@/components/Field";
 import { FilterCard } from "@/components/FilterCard";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -475,7 +475,10 @@ export default function Members() {
           }
         >
           <DSField>
-            <DSFieldLabel>정지 사유</DSFieldLabel>
+            <DSFieldLabel>
+              정지 사유
+              <RequiredMark />
+            </DSFieldLabel>
             <DSFieldContent>
               <Textarea
                 value={banReason}
@@ -494,6 +497,7 @@ export default function Members() {
             onUntilDateChange={setBanUntilDate}
             minDate={localDateAfter(1)}
             releaseDate={banReleaseDate}
+            required
           />
 
           {banError && (

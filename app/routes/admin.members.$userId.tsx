@@ -44,6 +44,7 @@ import {
   resolveBanUntilDate,
   type BanDurationValue,
 } from "@/components/BanDurationPicker";
+import { RequiredMark } from "@/components/Field";
 import { Modal } from "@/components/Modal";
 import { ProviderBadge } from "@/components/ProviderBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -450,7 +451,10 @@ export default function MemberDetail() {
           }
         >
           <Field>
-            <FieldLabel>정지 사유</FieldLabel>
+            <FieldLabel>
+              정지 사유
+              <RequiredMark />
+            </FieldLabel>
             <FieldContent>
               <Textarea
                 value={banReason}
@@ -469,6 +473,7 @@ export default function MemberDetail() {
             onUntilDateChange={setBanUntilDate}
             minDate={localDateAfter(1)}
             releaseDate={banReleaseDate}
+            required
           />
 
           {banError && (

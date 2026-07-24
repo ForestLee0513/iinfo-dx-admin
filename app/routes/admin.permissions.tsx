@@ -31,7 +31,7 @@ import {
 import { PLATFORM_OPTIONS } from "@/api/users/constants";
 import type { AuthMemberRole } from "@/api/auth/types";
 import type { UserSummary } from "@/api/users/types";
-import { Field } from "@/components/Field";
+import { Field, RequiredMark } from "@/components/Field";
 import { FilterCard } from "@/components/FilterCard";
 import { formatDate } from "@/lib/format";
 import { Modal } from "@/components/Modal";
@@ -339,7 +339,10 @@ export default function Permissions() {
           </DSField>
 
           <DSField>
-            <DSFieldLabel>변경할 역할</DSFieldLabel>
+            <DSFieldLabel>
+              변경할 역할
+              <RequiredMark />
+            </DSFieldLabel>
             <DSFieldContent>
               <ToggleGroup
                 variant="outline"

@@ -695,7 +695,7 @@ export default function Crawling() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <FilterCard>
-              <Field label="종류">
+              <Field label="종류" required>
                 <Select
                   value={kind}
                   items={CRAWL_KIND_OPTIONS}
@@ -724,7 +724,7 @@ export default function Crawling() {
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="크롤러">
+              <Field label="크롤러" required>
                 <Select
                   value={crawler}
                   items={crawlerSelectItems}
@@ -1011,7 +1011,7 @@ function TargetFormModal({
       ) : (
         <div className="flex flex-col gap-4">
           <FilterCard>
-            <Field label="종류">
+            <Field label="종류" required>
               {isEdit ? (
                 <div className="py-2 text-sm">
                   {CRAWL_KIND_OPTIONS.find((o) => o.value === kind)?.label ?? kind}
@@ -1042,7 +1042,7 @@ function TargetFormModal({
                 </Select>
               )}
             </Field>
-            <Field label="ID">
+            <Field label="ID" required>
               {isEdit ? (
                 <div className="py-2 text-sm text-muted-foreground">{id}</div>
               ) : (
@@ -1053,10 +1053,10 @@ function TargetFormModal({
                 />
               )}
             </Field>
-            <Field label="이름">
+            <Field label="이름" required>
               <Input value={label} onChange={(e) => setLabel(e.target.value)} />
             </Field>
-            <Field label="크롤러">
+            <Field label="크롤러" required>
               <Select
                 value={crawler}
                 items={crawlerSelectItems}

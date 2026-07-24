@@ -22,4 +22,5 @@ export type BanDurationPickerProps = {
   onUntilDateChange: (value: string) => void;
   minDate: string;
   releaseDate?: Date;
+  required?: boolean;
 };

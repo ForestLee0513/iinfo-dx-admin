@@ -16,6 +16,7 @@ import {
 
 import type { Route } from "./+types/login";
 import { startOAuthLogin, useEmailLoginMutation } from "@/api/auth/requests";
+import { RequiredMark } from "@/components/Field";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function meta({}: Route.MetaArgs) {
@@ -81,7 +82,10 @@ export default function Login() {
             >
               <FieldGroup>
                 <Field>
-                  <FieldLabel htmlFor="email">이메일</FieldLabel>
+                  <FieldLabel htmlFor="email">
+                    이메일
+                    <RequiredMark />
+                  </FieldLabel>
                   <Input
                     id="email"
                     type="email"
@@ -94,7 +98,10 @@ export default function Login() {
                 </Field>
 
                 <Field>
-                  <FieldLabel htmlFor="password">비밀번호</FieldLabel>
+                  <FieldLabel htmlFor="password">
+                    비밀번호
+                    <RequiredMark />
+                  </FieldLabel>
                   <Input
                     id="password"
                     type="password"

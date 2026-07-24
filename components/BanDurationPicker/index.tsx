@@ -7,6 +7,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@forestlee0513/iinfo-dx-design-system";
+import { RequiredMark } from "@/components/Field";
 import { BAN_DURATION_OPTIONS } from "./types";
 import type { BanDurationPickerProps, BanDurationValue } from "./types";
 import { formatKoreanDateTime } from "./utils";
@@ -22,10 +23,14 @@ export function BanDurationPicker({
   onUntilDateChange,
   minDate,
   releaseDate,
+  required = false,
 }: BanDurationPickerProps) {
   return (
     <Field>
-      <FieldLabel>정지 기간</FieldLabel>
+      <FieldLabel>
+        정지 기간
+        {required && <RequiredMark />}
+      </FieldLabel>
       <FieldContent>
         <ToggleGroup
           variant="outline"
