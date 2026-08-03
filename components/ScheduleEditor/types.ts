@@ -1,4 +1,4 @@
-import type { ScheduleTrigger } from "@/api/crawl/types";
+import type { ScheduleTrigger } from "@/api/iidx/crawl/types";
 
 export interface ScheduleEditorProps {
   triggers: ScheduleTrigger[];

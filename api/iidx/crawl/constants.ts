@@ -1,4 +1,4 @@
-export const CRAWL_BASE = "/api/v1/crawl";
+export const CRAWL_BASE = "/api/v1/iidx/crawl";
 
 /*
 GET /api/v1/crawl/jobs limit 상한 — 서버 스키마와 동일하게 유지.

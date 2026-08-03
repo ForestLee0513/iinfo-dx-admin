@@ -34,12 +34,12 @@ import {
   useTriggerCrawlMutation,
   useUpdateCrawlTargetMutation,
   useUpdateScheduleMutation,
-} from "@/api/crawl/requests";
+} from "@/api/iidx/crawl/requests";
 import {
   CRAWL_KIND_OPTIONS,
   JOB_STATUS_LABELS,
   JOB_STEP_STATUS_LABELS,
-} from "@/api/crawl/constants";
+} from "@/api/iidx/crawl/constants";
 import type {
   CrawlJob,
   CrawlJobStepStatus,
@@ -51,7 +51,7 @@ import type {
   PreviewTable,
   SongMasterPreviewResponse,
   SongPreview,
-} from "@/api/crawl/types";
+} from "@/api/iidx/crawl/types";
 import { Field } from "@/components/Field";
 import { FilterCard } from "@/components/FilterCard";
 import { Modal } from "@/components/Modal";
@@ -95,7 +95,8 @@ function JobStatusBadge({ status }: { status: CrawlJob["status"] }) {
 작업의 스텝별 상태를 배지로 나열한다. 실패 스텝은 오류 메시지를 툴팁으로 보여준다.
 */
 function StepBadges({ steps }: { steps: JobStep[] }) {
-  if (steps.length === 0) return <span className="text-muted-foreground">-</span>;
+  if (steps.length === 0)
+    return <span className="text-muted-foreground">-</span>;
 
   return (
     <div className="flex flex-wrap gap-1">
@@ -144,7 +145,9 @@ function resultItemLabel(item: JobStepResultItem) {
 작업의 모든 스텝 result.results를 합쳐 성공/실패 건수를 센다. 결과가 하나도
 없으면(구 작업, 즉시 SKIPPED 등) null을 반환한다.
 */
-function countJobResults(job: CrawlJob): { success: number; failed: number } | null {
+function countJobResults(
+  job: CrawlJob,
+): { success: number; failed: number } | null {
   const items = job.steps.flatMap((s) => s.result?.results ?? []);
   if (items.length === 0) return null;
   const failed = items.filter(isResultItemFailed).length;
@@ -155,12 +158,20 @@ function countJobResults(job: CrawlJob): { success: number; failed: number } | n
 등록된 크롤 대상 하나를 식별할 이름. kind:id 형태의 key보다 사람이 읽기 쉬운
 label을 우선 노출한다.
 */
-function targetDisplayName(target: CrawlTarget | undefined, fallbackId: string) {
+function targetDisplayName(
+  target: CrawlTarget | undefined,
+  fallbackId: string,
+) {
   return target?.label ?? fallbackId;
 }
 
 const previewEntryColumns: Column<PreviewEntry>[] = [
-  { key: "title", header: "곡명", cellClassName: "font-medium", cell: (e) => e.title },
+  {
+    key: "title",
+    header: "곡명",
+    cellClassName: "font-medium",
+    cell: (e) => e.title,
+  },
   {
     key: "series",
     header: "시리즈",
@@ -211,8 +222,18 @@ function PreviewTableResult({ tables }: { tables?: PreviewTable[] | null }) {
 }
 
 const songPreviewColumns: Column<SongPreview>[] = [
-  { key: "tag", header: "태그", cellClassName: "text-muted-foreground", cell: (s) => s.tag },
-  { key: "title", header: "제목", cellClassName: "font-medium", cell: (s) => s.title },
+  {
+    key: "tag",
+    header: "태그",
+    cellClassName: "text-muted-foreground",
+    cell: (s) => s.tag,
+  },
+  {
+    key: "title",
+    header: "제목",
+    cellClassName: "font-medium",
+    cell: (s) => s.title,
+  },
   { key: "genre", header: "장르", cell: (s) => s.genre ?? "-" },
   { key: "artist", header: "아티스트", cell: (s) => s.artist ?? "-" },
   { key: "version", header: "버전", cell: (s) => s.version ?? "-" },
@@ -293,7 +314,9 @@ const EMPTY_CRAWLER_FIELDS: CrawlerFormFields = {
 /*
 빈 값/기본값은 제외하고 서버에 보낼 크롤러별 설정 객체를 만든다.
 */
-function buildCrawlerFields(fields: CrawlerFormFields): Record<string, unknown> {
+function buildCrawlerFields(
+  fields: CrawlerFormFields,
+): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   if (fields.url.trim()) out.url = fields.url.trim();
   if (fields.playStyle !== "미지정") out.play_style = fields.playStyle;
@@ -359,10 +382,16 @@ function CrawlerFieldsFieldset({
         />
       </Field>
       <Field label="표 slug">
-        <Input value={fields.slug} onChange={(e) => onChange({ slug: e.target.value })} />
+        <Input
+          value={fields.slug}
+          onChange={(e) => onChange({ slug: e.target.value })}
+        />
       </Field>
       <Field label="표 이름">
-        <Input value={fields.name} onChange={(e) => onChange({ name: e.target.value })} />
+        <Input
+          value={fields.name}
+          onChange={(e) => onChange({ name: e.target.value })}
+        />
       </Field>
       <Field label="출처">
         <Input
@@ -383,9 +412,13 @@ export default function Crawling() {
   const previewMutation = usePreviewCrawlMutation();
 
   const [triggerError, setTriggerError] = useState<string | null>(null);
-  const [scheduleTarget, setScheduleTarget] = useState<CrawlTarget | null>(null);
+  const [scheduleTarget, setScheduleTarget] = useState<CrawlTarget | null>(
+    null,
+  );
   // "create" = 신규 등록, CrawlTarget = 해당 대상 수정
-  const [targetModal, setTargetModal] = useState<"create" | CrawlTarget | null>(null);
+  const [targetModal, setTargetModal] = useState<"create" | CrawlTarget | null>(
+    null,
+  );
   const deleteTargetMutation = useDeleteCrawlTargetMutation();
   const [resultJob, setResultJob] = useState<CrawlJob | null>(null);
 
@@ -413,7 +446,10 @@ export default function Crawling() {
   }, [schedulesQuery.data]);
 
   const crawlerOptions = targetsQuery.data?.registered_crawlers[kind] ?? [];
-  const crawlerSelectItems = crawlerOptions.map((c) => ({ value: c, label: c }));
+  const crawlerSelectItems = crawlerOptions.map((c) => ({
+    value: c,
+    label: c,
+  }));
 
   async function handlePreview() {
     setTriggerError(null);
@@ -435,7 +471,9 @@ export default function Crawling() {
         scope: kind,
         target: { crawler, ...buildCrawlerFields(fields) },
       });
-      window.alert("크롤 작업을 실행했습니다. 아래 작업 내역에서 진행 상황을 확인하세요.");
+      window.alert(
+        "크롤 작업을 실행했습니다. 아래 작업 내역에서 진행 상황을 확인하세요.",
+      );
     } catch (err) {
       setTriggerError(getApiErrorMessage(err));
     }
@@ -458,7 +496,10 @@ export default function Crawling() {
   async function handleTargetTrigger(target: CrawlTarget) {
     setTriggerError(null);
     try {
-      await triggerMutation.mutateAsync({ scope: target.kind, target_id: target.id });
+      await triggerMutation.mutateAsync({
+        scope: target.kind,
+        target_id: target.id,
+      });
       window.alert(`"${target.label}" 크롤 작업을 실행했습니다.`);
     } catch (err) {
       window.alert(getApiErrorMessage(err));
@@ -466,7 +507,8 @@ export default function Crawling() {
   }
 
   async function handleFullTrigger() {
-    if (!window.confirm("전체 대상(곡 마스터 → 난이도표)을 동기화할까요?")) return;
+    if (!window.confirm("전체 대상(곡 마스터 → 난이도표)을 동기화할까요?"))
+      return;
     setTriggerError(null);
     try {
       await triggerMutation.mutateAsync({ scope: "full" });
@@ -515,7 +557,11 @@ export default function Crawling() {
         return (
           <Tooltip>
             <TooltipTrigger
-              render={<Badge variant="default">활성 ({schedule.triggers.length})</Badge>}
+              render={
+                <Badge variant="default">
+                  활성 ({schedule.triggers.length})
+                </Badge>
+              }
             />
             <TooltipContent>
               다음 실행: {formatDateTime(schedule.next_run_at)}
@@ -540,7 +586,11 @@ export default function Crawling() {
           >
             지금 실행
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setScheduleTarget(t)}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setScheduleTarget(t)}
+          >
             스케줄 설정
           </Button>
           <Button size="sm" variant="ghost" onClick={() => setTargetModal(t)}>
@@ -608,7 +658,9 @@ export default function Crawling() {
           <Button size="sm" variant="ghost" onClick={() => setResultJob(job)}>
             성공 {counts.success}
             {counts.failed > 0 && (
-              <span className="text-destructive">&nbsp;· 실패 {counts.failed}</span>
+              <span className="text-destructive">
+                &nbsp;· 실패 {counts.failed}
+              </span>
             )}
           </Button>
         );
@@ -668,7 +720,10 @@ export default function Crawling() {
               </CardDescription>
               <CardAction>
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setTargetModal("create")}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setTargetModal("create")}
+                  >
                     대상 등록
                   </Button>
                   <Button
@@ -689,8 +744,8 @@ export default function Crawling() {
           <CardHeader>
             <CardTitle>미리보기 &amp; 즉시 실행</CardTitle>
             <CardDescription>
-              등록 여부와 무관하게 대상을 직접 지정해 크롤 결과를 미리 보거나 바로
-              실행합니다. 미리보기는 실제 저장소에 반영되지 않습니다.
+              등록 여부와 무관하게 대상을 직접 지정해 크롤 결과를 미리 보거나
+              바로 실행합니다. 미리보기는 실제 저장소에 반영되지 않습니다.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
@@ -704,7 +759,8 @@ export default function Crawling() {
                       const nextKind = value as CrawlKind;
                       setKind(nextKind);
                       setCrawler(
-                        targetsQuery.data?.registered_crawlers[nextKind]?.[0] ?? "",
+                        targetsQuery.data?.registered_crawlers[nextKind]?.[0] ??
+                          "",
                       );
                       // 종류가 바뀌면 이전 종류에서 입력한 값이 그대로 남아
                       // 실행/미리보기에 섞여 들어가지 않도록 폼을 초기화한다.
@@ -744,7 +800,11 @@ export default function Crawling() {
                   </SelectContent>
                 </Select>
               </Field>
-              <CrawlerFieldsFieldset kind={kind} fields={fields} onChange={patchFields} />
+              <CrawlerFieldsFieldset
+                kind={kind}
+                fields={fields}
+                onChange={patchFields}
+              />
             </FilterCard>
 
             <div className="flex gap-2">
@@ -826,7 +886,9 @@ export default function Crawling() {
       )}
 
       {/* 작업 결과 상세 모달 */}
-      {resultJob && <JobResultModal job={resultJob} onClose={() => setResultJob(null)} />}
+      {resultJob && (
+        <JobResultModal job={resultJob} onClose={() => setResultJob(null)} />
+      )}
     </div>
   );
 }
@@ -882,7 +944,10 @@ function ScheduleModal({
           >
             취소
           </Button>
-          <Button onClick={handleSave} disabled={updateScheduleMutation.isPending}>
+          <Button
+            onClick={handleSave}
+            disabled={updateScheduleMutation.isPending}
+          >
             {updateScheduleMutation.isPending ? "저장 중…" : "저장"}
           </Button>
         </>
@@ -943,7 +1008,8 @@ function TargetFormModal({
     setCrawler(detail.crawler);
     setFields({
       url: typeof detail.url === "string" ? detail.url : "",
-      playStyle: typeof detail.play_style === "string" ? detail.play_style : "미지정",
+      playStyle:
+        typeof detail.play_style === "string" ? detail.play_style : "미지정",
       level: typeof detail.level === "number" ? String(detail.level) : "",
       slug: typeof detail.slug === "string" ? detail.slug : "",
       name: typeof detail.name === "string" ? detail.name : "",
@@ -957,7 +1023,10 @@ function TargetFormModal({
   }
 
   const crawlerOptions = registeredCrawlers[kind] ?? [];
-  const crawlerSelectItems = crawlerOptions.map((c) => ({ value: c, label: c }));
+  const crawlerSelectItems = crawlerOptions.map((c) => ({
+    value: c,
+    label: c,
+  }));
   const isPending = createMutation.isPending || updateMutation.isPending;
   const formInvalid = !id.trim() || !label.trim() || !crawler;
   const detailLoading = isEdit && detailQuery.isPending;
@@ -1014,7 +1083,8 @@ function TargetFormModal({
             <Field label="종류" required>
               {isEdit ? (
                 <div className="py-2 text-sm">
-                  {CRAWL_KIND_OPTIONS.find((o) => o.value === kind)?.label ?? kind}
+                  {CRAWL_KIND_OPTIONS.find((o) => o.value === kind)?.label ??
+                    kind}
                 </div>
               ) : (
                 <Select
@@ -1076,7 +1146,11 @@ function TargetFormModal({
                 </SelectContent>
               </Select>
             </Field>
-            <CrawlerFieldsFieldset kind={kind} fields={fields} onChange={patchFields} />
+            <CrawlerFieldsFieldset
+              kind={kind}
+              fields={fields}
+              onChange={patchFields}
+            />
           </FilterCard>
 
           {error && (
@@ -1119,8 +1193,16 @@ const resultItemColumns: Column<JobStepResultItem>[] = [
 레벨 배지(StepBadges)는 스텝 전체의 성공/실패만 알려주므로, 스텝 하나가
 여러 대상을 순회할 때(예: 전체 동기화) 대상별 성공/실패를 여기서 구분해 보여준다.
 */
-function JobResultModal({ job, onClose }: { job: CrawlJob; onClose: () => void }) {
-  const stepsWithResults = job.steps.filter((s) => (s.result?.results?.length ?? 0) > 0);
+function JobResultModal({
+  job,
+  onClose,
+}: {
+  job: CrawlJob;
+  onClose: () => void;
+}) {
+  const stepsWithResults = job.steps.filter(
+    (s) => (s.result?.results?.length ?? 0) > 0,
+  );
 
   return (
     <Modal
@@ -1131,7 +1213,9 @@ function JobResultModal({ job, onClose }: { job: CrawlJob; onClose: () => void }
     >
       <div className="flex flex-col gap-4">
         {stepsWithResults.length === 0 ? (
-          <p className="text-sm text-muted-foreground">대상별 결과가 없습니다.</p>
+          <p className="text-sm text-muted-foreground">
+            대상별 결과가 없습니다.
+          </p>
         ) : (
           stepsWithResults.map((step) => (
             <DataTable

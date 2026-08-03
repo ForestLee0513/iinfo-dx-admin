@@ -33,7 +33,7 @@ export const catalogKeys = {
 };
 
 /*
-GET /api/v1/admin/tables — 난이도표 목록 조회 (엔트리 제외)
+GET /api/v1/iidx/admin/tables — 난이도표 목록 조회 (엔트리 제외)
 */
 export async function getTableList() {
   const { data } = await api.get<TableListResponse>(`${CATALOG_BASE}/tables`);
@@ -52,7 +52,7 @@ export function useTableListQuery() {
 }
 
 /*
-GET /api/v1/admin/tables/{slug} — 난이도표 1개 + 엔트리 조회
+GET /api/v1/iidx/admin/tables/{slug} — 난이도표 1개 + 엔트리 조회
 */
 export async function getTableDetail(slug: string, params: TableDetailRequest = {}) {
   const { data } = await api.get<TableDetail>(`${CATALOG_BASE}/tables/${slug}`, {
@@ -80,7 +80,7 @@ export function useTableDetailQuery(
 }
 
 /*
-GET /api/v1/admin/songs — 곡 목록 조회 (채보 제외)
+GET /api/v1/iidx/admin/songs — 곡 목록 조회 (채보 제외)
 빈 값/미지정 필터는 파라미터에서 제외해 쿼리 키를 안정적으로 유지한다.
 */
 export async function getSongList(params: SongListRequest = {}) {
@@ -119,7 +119,7 @@ export function useSongListQuery(params?: SongListRequest) {
 }
 
 /*
-GET /api/v1/admin/songs/{song_id} — 곡 1개 + 채보 조회
+GET /api/v1/iidx/admin/songs/{song_id} — 곡 1개 + 채보 조회
 */
 export async function getSongDetail(songId: string) {
   const { data } = await api.get<SongDetail>(`${CATALOG_BASE}/songs/${songId}`);
@@ -138,7 +138,7 @@ export function useSongDetailQuery(songId: string, enabled = true) {
 }
 
 /*
-GET /api/v1/admin/versions — 시리즈 버전 목록 (곡 필터 드롭다운/표시용)
+GET /api/v1/iidx/admin/versions — 시리즈 버전 목록 (곡 필터 드롭다운/표시용)
 */
 export async function getVersionList() {
   const { data } = await api.get<VersionListResponse>(

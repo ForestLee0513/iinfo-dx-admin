@@ -23,14 +23,14 @@ import {
   useTableDetailQuery,
   useTableListQuery,
   useVersionListQuery,
-} from "@/api/catalog/requests";
-import { AC_FILTER_OPTIONS } from "@/api/catalog/constants";
+} from "@/api/iidx/catalog/requests";
+import { AC_FILTER_OPTIONS } from "@/api/iidx/catalog/constants";
 import type {
   ChartSummary,
   DifficultyEntry,
   SongSummary,
   TableSummary,
-} from "@/api/catalog/types";
+} from "@/api/iidx/catalog/types";
 import { Field } from "@/components/Field";
 import { FilterCard } from "@/components/FilterCard";
 import { Modal } from "@/components/Modal";

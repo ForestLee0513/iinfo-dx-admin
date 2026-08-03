@@ -15,6 +15,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -32,7 +33,7 @@ import {
 } from "@/api/auth/requests";
 import { canAccessAdmin } from "@/api/auth/roles";
 import { setAuthErrorCallback } from "@/lib/axios";
-import { ADMIN_LANDING_PATH, NAV_ITEMS } from "@/app/admin-nav";
+import { ADMIN_LANDING_PATH, NAV_GROUPS } from "@/app/admin-nav";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 function AdminLayoutSkeleton() {
@@ -43,13 +44,18 @@ function AdminLayoutSkeleton() {
           <Skeleton className="h-6 w-24 rounded" />
         </SidebarHeader>
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent className="flex flex-col gap-2">
-              {Array.from({ length: 4 }, (_, i) => (
-                <Skeleton key={i} className="h-8 w-full rounded-xl" />
-              ))}
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {[2, 2].map((count, gi) => (
+            <SidebarGroup key={gi}>
+              <SidebarGroupLabel>
+                <Skeleton className="h-3 w-20 rounded" />
+              </SidebarGroupLabel>
+              <SidebarGroupContent className="flex flex-col gap-2">
+                {Array.from({ length: count }, (_, i) => (
+                  <Skeleton key={i} className="h-8 w-full rounded-xl" />
+                ))}
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
         <SidebarFooter>
           <Skeleton className="h-4 w-12 rounded" />
@@ -99,7 +105,7 @@ export default function AdminLayout() {
   const authorized = canAccessAdmin(me?.app_role);
 
   // 현재 URL이 역할 제한 메뉴에 해당하면, 메뉴 숨김과 별개로 직접 접근도 차단.
-  const restrictedRoles = NAV_ITEMS.find(
+  const restrictedRoles = NAV_GROUPS.flatMap((g) => g.items).find(
     ({ to, roles }) => roles && isPathUnderNav(location.pathname, to),
   )?.roles;
   const routeAllowed =
@@ -145,9 +151,13 @@ export default function AdminLayout() {
   }
 
   // 역할 제한이 없는 메뉴는 모두 노출, 있으면 현재 역할이 포함될 때만 노출.
-  const visibleNavItems = NAV_ITEMS.filter(
-    ({ roles }) => !roles || (me && roles.includes(me.app_role)),
-  );
+  // 항목이 하나도 없는 그룹은 숨긴다.
+  const visibleNavGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter(
+      ({ roles }) => !roles || (me && roles.includes(me.app_role)),
+    ),
+  })).filter((group) => group.items.length > 0);
 
   function handleLogout() {
     logout.mutate(undefined, {
@@ -165,20 +175,23 @@ export default function AdminLayout() {
         </SidebarHeader>
 
         <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {visibleNavItems.map(({ to, label }) => (
-                  <SidebarMenuItem key={to}>
-                    <SidebarMenuButton
-                      isActive={isPathUnderNav(location.pathname, to)}
-                      render={<NavLink to={to}>{label}</NavLink>}
-                    />
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+          {visibleNavGroups.map((group) => (
+            <SidebarGroup key={group.label}>
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items.map(({ to, label }) => (
+                    <SidebarMenuItem key={to}>
+                      <SidebarMenuButton
+                        isActive={isPathUnderNav(location.pathname, to)}
+                        render={<NavLink to={to}>{label}</NavLink>}
+                      />
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
         </SidebarContent>
 
         <SidebarFooter>

@@ -24,7 +24,7 @@ export const authKeys = {
 };
 
 /*
-POST /api/v1/web/auth/login — 이메일 로그인
+POST /api/v1/admin/auth/login — 이메일 로그인
 성공 시 서버가 세션(refresh) 쿠키를 설정한다 (withCredentials 필수).
 */
 export async function loginWithEmail(body: AuthLoginRequest) {
@@ -64,7 +64,7 @@ export function useEmailLoginMutation() {
 }
 
 /*
-GET /api/v1/web/auth/login/{provider} — OAuth 로그인
+GET /api/v1/admin/auth/login/{provider} — OAuth 로그인
 XHR이 아닌 전체 페이지 리다이렉트로 진입해야 하며,
 공급자 인증 완료 후 콜백에서 세션 쿠키가 설정된다.
 */
@@ -84,7 +84,7 @@ export function startOAuthLogin(request: AuthOAuthLoginRequest) {
 }
 
 /*
-POST /api/v1/web/auth/refresh — 세션 갱신 (쿠키 기반, 본문 불필요)
+POST /api/v1/admin/auth/refresh — 세션 갱신 (쿠키 기반, 본문 불필요)
 */
 export async function refreshSession() {
   const { data } = await api.post<AuthRefreshResponse>(`${AUTH_BASE}/refresh`);
@@ -104,7 +104,7 @@ export function useRefreshSessionMutation() {
 }
 
 /*
-GET /api/v1/web/auth/me — 현재 로그인 사용자 조회
+GET /api/v1/admin/auth/me — 현재 로그인 사용자 조회
 */
 export async function getMyInfo() {
   const { data } = await api.get<AuthMyInfoResponse>(`${AUTH_BASE}/me`);
@@ -121,7 +121,7 @@ export function useMyInfoQuery() {
 }
 
 /*
-POST /api/v1/web/auth/logout — 로그아웃
+POST /api/v1/admin/auth/logout — 로그아웃
 성공 시 서버가 세션 쿠키를 제거한다 (withCredentials 필수).
 */
 export async function logout() {

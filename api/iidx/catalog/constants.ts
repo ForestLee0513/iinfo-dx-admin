@@ -1,4 +1,4 @@
-export const CATALOG_BASE = "/api/v1/admin";
+export const CATALOG_BASE = "/api/v1/iidx/admin";
 
 /*
 GET /api/v1/admin/songs 페이지네이션 기본값 — 서버 스키마와 동일하게 유지.

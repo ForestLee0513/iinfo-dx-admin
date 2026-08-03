@@ -16,15 +16,30 @@ export type NavItem = {
   roles?: readonly AuthMemberRole[];
 };
 
-export const NAV_ITEMS: NavItem[] = [
-  { to: "/members", label: "회원 관리" },
+export type NavGroup = {
+  label: string;
+  items: NavItem[];
+};
+
+export const NAV_GROUPS: NavGroup[] = [
   {
-    to: "/permissions",
-    label: "권한 관리",
-    roles: [AUTH_MEMBER_ROLE.SUPER_ADMIN],
+    label: "회원 서비스",
+    items: [
+      { to: "/members", label: "회원 관리" },
+      {
+        to: "/permissions",
+        label: "권한 관리",
+        roles: [AUTH_MEMBER_ROLE.SUPER_ADMIN],
+      },
+    ],
   },
-  { to: "/crawling", label: "크롤링 관리" },
-  { to: "/data", label: "테이블 데이터 관리" },
+  {
+    label: "IIDX",
+    items: [
+      { to: "/crawling", label: "크롤링 관리" },
+      { to: "/data", label: "테이블 데이터 관리" },
+    ],
+  },
 ];
 
 /*
@@ -32,4 +47,4 @@ export const NAV_ITEMS: NavItem[] = [
 역할 제한이 없어 어드민 접근이 가능한 모든 역할에게 노출되므로,
 인증된 세션을 로그인 화면에서 곧바로 보낼 안전한 기본 목적지가 된다.
 */
-export const ADMIN_LANDING_PATH = NAV_ITEMS[0].to;
+export const ADMIN_LANDING_PATH = NAV_GROUPS[0].items[0].to;

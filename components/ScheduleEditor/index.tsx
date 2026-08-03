@@ -11,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@forestlee0513/iinfo-dx-design-system";
-import { SCHEDULE_DAY_OPTIONS } from "@/api/crawl/constants";
-import type { ScheduleDay } from "@/api/crawl/types";
+import { SCHEDULE_DAY_OPTIONS } from "@/api/iidx/crawl/constants";
+import type { ScheduleDay } from "@/api/iidx/crawl/types";
 import type { ScheduleEditorProps } from "./types";
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
@@ -26,7 +26,9 @@ function toTimeValue(hour: number, minute: number) {
   return `${pad2(hour)}:${pad2(minute)}`;
 }
 
-function parseTimeValue(value: string): { hour: number; minute: number } | null {
+function parseTimeValue(
+  value: string,
+): { hour: number; minute: number } | null {
   const match = /^(\d{2}):(\d{2})$/.exec(value);
   if (!match) return null;
   return { hour: Number(match[1]), minute: Number(match[2]) };
@@ -45,7 +47,10 @@ export function ScheduleEditor({ triggers, onChange }: ScheduleEditorProps) {
     onChange(triggers.filter((_, i) => i !== index));
   }
 
-  function updateTrigger(index: number, patch: Partial<(typeof triggers)[number]>) {
+  function updateTrigger(
+    index: number,
+    patch: Partial<(typeof triggers)[number]>,
+  ) {
     onChange(triggers.map((t, i) => (i === index ? { ...t, ...patch } : t)));
   }
 
@@ -63,7 +68,8 @@ export function ScheduleEditor({ triggers, onChange }: ScheduleEditorProps) {
               value={trigger.day}
               items={SCHEDULE_DAY_OPTIONS}
               onValueChange={(value) => {
-                if (value !== null) updateTrigger(i, { day: value as ScheduleDay });
+                if (value !== null)
+                  updateTrigger(i, { day: value as ScheduleDay });
               }}
             >
               <SelectTrigger className="w-20">
@@ -92,7 +98,12 @@ export function ScheduleEditor({ triggers, onChange }: ScheduleEditorProps) {
           </div>
         ))}
 
-        <Button variant="outline" size="sm" onClick={addTrigger} className="self-start">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={addTrigger}
+          className="self-start"
+        >
           시각 추가
         </Button>
       </FieldContent>
