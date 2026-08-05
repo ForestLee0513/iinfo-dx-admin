@@ -9,7 +9,7 @@
     "typecheck": "react-router typegen && tsc"
   },
   "dependencies": {
-    "@forestlee0513/iinfo-dx-design-system": "^1.0.2",
+    "@forestlee0513/iinfo-dx-design-system": "^1.0.3",
     "@react-router/node": "8.0.0",
     "@react-router/serve": "8.0.0",
     "@tabler/icons-react": "^3.44.0",

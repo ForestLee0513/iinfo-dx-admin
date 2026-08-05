@@ -344,10 +344,10 @@
   resolved "https://registry.yarnpkg.com/@floating-ui/utils/-/utils-0.2.12.tgz#afefe785949f16ac4cdd1e695935a321572dd56a"
   integrity sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==
 
-"@forestlee0513/iinfo-dx-design-system@^1.0.2":
-  version "1.0.2"
-  resolved "https://npm.pkg.github.com/download/@forestlee0513/iinfo-dx-design-system/1.0.2/31efe96b9107f3a6a9c11c2bea354c63a0f3a7a4#31efe96b9107f3a6a9c11c2bea354c63a0f3a7a4"
-  integrity sha512-CBzJK09tkiLYbHb4fj//BDTxDl7BnIYnk/ZgAnj5BTvb0QDKOZs7WdMWVUWiSbMsKGSyDemLqeDQX2T3B6HwbA==
+"@forestlee0513/iinfo-dx-design-system@^1.0.3":
+  version "1.0.3"
+  resolved "https://npm.pkg.github.com/download/@forestlee0513/iinfo-dx-design-system/1.0.3/9c7de2b1cf66d52d3f0b52dcf7a6342b6f81e162#9c7de2b1cf66d52d3f0b52dcf7a6342b6f81e162"
+  integrity sha512-2kmFHmnwr/IcPdvW8W3QSZ9TTbq1+wUq1/9JIwADkRmr8C08Xq5JKXhrtVf+xMu7lnW5BWxAH6TGnxPXfDwcWw==
   dependencies:
     "@base-ui/react" "^1.6.0"
     "@tabler/icons-react" "^3.44.0"
