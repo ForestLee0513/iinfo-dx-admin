@@ -1,21 +1,16 @@
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
-  Badge,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Skeleton,
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import {
   useSongDetailQuery,

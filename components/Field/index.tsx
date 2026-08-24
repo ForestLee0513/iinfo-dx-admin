@@ -1,8 +1,5 @@
 import type { ReactNode } from "react";
-import {
-  Field as DSField,
-  FieldLabel,
-} from "@forestlee0513/iinfo-dx-design-system";
+import { Field as DSField, FieldLabel } from "@/components/ui/field";
 
 /*
 라벨 + 입력 컨트롤을 세로로 묶는 폼 필드 래퍼.

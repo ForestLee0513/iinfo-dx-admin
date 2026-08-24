@@ -6,10 +6,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/dialog";
 
 /*
-가운데 정렬 모달. 디자인 시스템 Dialog 위에 title/description/footer를 조합해 렌더한다.
+가운데 정렬 모달. shadcn Dialog 위에 title/description/footer를 조합해 렌더한다.
 closeDisabled면 배경 클릭·ESC·닫기 버튼으로 닫히지 않는다.
 - title: 상단 제목
 - description: 제목 아래 보조 설명(선택)

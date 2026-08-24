@@ -7,7 +7,7 @@ import {
   ScrollRestoration,
 } from "react-router";
 
-import { TooltipProvider } from "@forestlee0513/iinfo-dx-design-system";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 import { useEffect, useLayoutEffect } from "react";
 

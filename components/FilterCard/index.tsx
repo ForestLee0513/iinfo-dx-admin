@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Card, CardContent } from "@forestlee0513/iinfo-dx-design-system";
+import { Card, CardContent } from "@/components/ui/card";
 
 /*
 목록 상단의 필터 카드. 내부는 3열 그리드로 Field들을 배치한다.

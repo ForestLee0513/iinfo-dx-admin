@@ -1,23 +1,23 @@
 import { useEffect, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { CardDescription, CardHeader } from "@/components/ui/card";
 import {
-  Badge,
-  Button,
-  CardDescription,
-  CardHeader,
   Field as DSField,
   FieldContent as DSFieldContent,
   FieldDescription,
   FieldLabel as DSFieldLabel,
-  Input,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Skeleton,
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 import { useMyInfoQuery } from "@/api/auth/requests";
 import { AUTH_MEMBER_ROLE } from "@/api/auth/constants";

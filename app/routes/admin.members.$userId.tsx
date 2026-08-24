@@ -1,30 +1,27 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  Alert,
-  AlertDescription,
-  Badge,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Field,
   FieldContent,
   FieldGroup,
   FieldLabel,
-  Label,
-  RadioGroup,
-  RadioGroupItem,
-  Skeleton,
+} from "@/components/ui/field";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-  Textarea,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 
 import {
   useBanUserMutation,

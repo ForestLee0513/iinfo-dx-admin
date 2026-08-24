@@ -1,19 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Alert,
-  AlertDescription,
-  Button,
-  Card,
-  CardContent,
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
-  Input,
-  Spinner,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 
 import type { Route } from "./+types/login";
 import {

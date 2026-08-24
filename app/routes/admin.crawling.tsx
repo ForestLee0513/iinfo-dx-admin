@@ -1,27 +1,26 @@
 import { useEffect, useMemo, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  Alert,
-  AlertDescription,
-  Badge,
-  Button,
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  Input,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Skeleton,
-  Switch,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import {
   useCrawlJobsQuery,

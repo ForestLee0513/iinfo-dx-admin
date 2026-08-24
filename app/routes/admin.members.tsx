@@ -1,30 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { CardAction, CardDescription, CardHeader } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Alert,
-  AlertDescription,
-  Badge,
-  Button,
-  ButtonGroup,
-  CardAction,
-  CardDescription,
-  CardHeader,
-  Checkbox,
   Field as DSField,
   FieldContent as DSFieldContent,
   FieldLabel as DSFieldLabel,
-  Input,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-  Skeleton,
-  Textarea,
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 import {
   useBanUserMutation,

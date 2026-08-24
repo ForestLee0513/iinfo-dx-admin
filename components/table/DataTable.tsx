@@ -1,15 +1,14 @@
 import type { ReactNode } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Card,
-  CardContent,
-  Skeleton,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/table";
 
 /*
 테이블 컬럼 정의.

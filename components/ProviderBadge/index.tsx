@@ -1,4 +1,4 @@
-import { Badge } from "@forestlee0513/iinfo-dx-design-system";
+import { Badge } from "@/components/ui/badge";
 import { PROVIDER_LABELS } from "@/api/users/constants";
 
 /*

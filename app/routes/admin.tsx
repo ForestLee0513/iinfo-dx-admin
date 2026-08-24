@@ -1,15 +1,16 @@
 import { useEffect } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Avatar,
-  AvatarFallback,
   Item,
   ItemContent,
   ItemDescription,
   ItemMedia,
   ItemTitle,
-  Separator,
+} from "@/components/ui/item";
+import { Separator } from "@/components/ui/separator";
+import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
@@ -23,8 +24,8 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-  Skeleton,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import {
   authKeys,

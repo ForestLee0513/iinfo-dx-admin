@@ -1,11 +1,13 @@
 import type { MouseEvent } from "react";
+import { CardFooter } from "@/components/ui/card";
 import {
-  CardFooter,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+} from "@/components/ui/select";
+import {
   Pagination as DSPagination,
   PaginationContent,
   PaginationEllipsis,
@@ -13,7 +15,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/pagination";
 import { getPageNumbers } from "./utils";
 
 export const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const;

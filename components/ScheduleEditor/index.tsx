@@ -1,16 +1,18 @@
+import { Button } from "@/components/ui/button";
 import {
-  Button,
   Field,
   FieldContent,
   FieldDescription,
   FieldLabel,
-  Input,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/select";
 import { SCHEDULE_DAY_OPTIONS } from "@/api/iidx/crawl/constants";
 import type { ScheduleDay } from "@/api/iidx/crawl/types";
 import type { ScheduleEditorProps } from "./types";

@@ -3,10 +3,9 @@ import {
   FieldContent,
   FieldDescription,
   FieldLabel,
-  Input,
-  ToggleGroup,
-  ToggleGroupItem,
-} from "@forestlee0513/iinfo-dx-design-system";
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { RequiredMark } from "@/components/Field";
 import { BAN_DURATION_OPTIONS } from "./types";
 import type { BanDurationPickerProps, BanDurationValue } from "./types";

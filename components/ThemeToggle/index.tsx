@@ -1,5 +1,5 @@
 import { IconMoon, IconSun } from "@tabler/icons-react";
-import { Button } from "@forestlee0513/iinfo-dx-design-system";
+import { Button } from "@/components/ui/button";
 
 import { useTheme } from "@/providers/ThemeProvider";
 
