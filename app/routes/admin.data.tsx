@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -127,13 +128,14 @@ function SongsPanel() {
       cellClassName: "font-medium",
       skeleton: <Skeleton className="h-4 w-40 rounded" />,
       cell: (song) => (
-        <button
+        <Button
           type="button"
-          className="text-left hover:underline"
+          variant="link"
+          className="h-auto p-0 text-left text-foreground"
           onClick={() => setDetailSongId(song.id)}
         >
           {song.title}
-        </button>
+        </Button>
       ),
     },
     {
@@ -390,13 +392,14 @@ function TablesPanel() {
       cellClassName: "font-medium",
       skeleton: <Skeleton className="h-4 w-40 rounded" />,
       cell: (table) => (
-        <button
+        <Button
           type="button"
-          className="text-left hover:underline"
+          variant="link"
+          className="h-auto p-0 text-left text-foreground"
           onClick={() => setDetailTable(table)}
         >
           {table.name}
-        </button>
+        </Button>
       ),
     },
     {

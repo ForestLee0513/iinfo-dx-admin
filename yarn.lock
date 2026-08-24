@@ -521,13 +521,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fontsource-variable/noto-sans@npm:^5.3.0":
-  version: 5.3.0
-  resolution: "@fontsource-variable/noto-sans@npm:5.3.0"
-  checksum: 10c0/5518c158bc8bdd067ac6e59972bdfb019888c5bf03da4c1d6f208995ed642ea7ae67c04e4f8efd8f21c1bc40998c3654b0bf21d2563947b98ff9c35a52fd1edc
-  languageName: node
-  linkType: hard
-
 "@hono/node-server@npm:^1.19.9 || ^2.0.5":
   version: 2.1.1
   resolution: "@hono/node-server@npm:2.1.1"
@@ -2612,7 +2605,6 @@ __metadata:
   resolution: "iinfo-dx-admin@workspace:."
   dependencies:
     "@base-ui/react": "npm:^1.7.0"
-    "@fontsource-variable/noto-sans": "npm:^5.3.0"
     "@react-router/dev": "npm:8.0.0"
     "@react-router/node": "npm:8.0.0"
     "@react-router/serve": "npm:8.0.0"
