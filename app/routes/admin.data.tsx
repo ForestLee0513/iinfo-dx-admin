@@ -506,7 +506,7 @@ const entryColumns: Column<DifficultyEntry>[] = [
   },
   {
     key: "table_type",
-    header: "표 종류",
+    header: "난이도 분류",
     cellClassName: "text-muted-foreground",
     cell: (entry) => entry.table_type ?? "-",
   },
