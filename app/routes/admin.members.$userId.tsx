@@ -4,12 +4,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Field,
-  FieldContent,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
+import { Field, FieldContent, FieldLabel } from "@/components/ui/field";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -58,6 +53,12 @@ const ASSIGNABLE_ROLES: AuthMemberRole[] = [
   AUTH_MEMBER_ROLE.ADMIN,
 ];
 
+/*
+Field(orientation="responsive")는 컨테이너 폭이 28rem을 넘으면 자식에 *:w-auto를
+강제해, FieldLabel에 준 고정폭(w-36)이 라벨 텍스트 길이에 따라 다시 auto로
+풀려버린다(동일 specificity에서 소스 순서상 field.tsx 쪽이 더 뒤라 이긴다).
+캐스케이드로 이기려 하지 않는 고정 그리드로 대체한다.
+*/
 function InfoRow({
   label,
   children,
@@ -66,10 +67,10 @@ function InfoRow({
   children: React.ReactNode;
 }) {
   return (
-    <Field orientation="responsive">
-      <FieldLabel className="w-36 flex-shrink-0">{label}</FieldLabel>
-      <FieldContent className="text-sm">{children}</FieldContent>
-    </Field>
+    <div className="grid grid-cols-[9rem_1fr] items-start gap-3">
+      <span className="text-sm leading-none font-medium">{label}</span>
+      <div className="text-sm">{children}</div>
+    </div>
   );
 }
 
@@ -259,7 +260,7 @@ export default function MemberDetail() {
       <div className="flex flex-col gap-5">
         {/* 기본 정보 */}
         <SectionCard title="기본 정보">
-          <FieldGroup>
+          <div className="flex flex-col gap-4">
             <InfoRow label="회원 ID">
               <span className="font-mono text-xs text-muted-foreground">
                 {detail.id}
@@ -273,13 +274,13 @@ export default function MemberDetail() {
             <InfoRow label="최근 로그인">
               {formatDate(detail.last_sign_in_at)}
             </InfoRow>
-          </FieldGroup>
+          </div>
         </SectionCard>
 
         {/* 현재 정지 정보 */}
         {detail.is_banned && detail.active_ban && (
           <SectionCard title="현재 정지 정보">
-            <FieldGroup>
+            <div className="flex flex-col gap-4">
               <InfoRow label="정지 사유">
                 <span className="whitespace-pre-wrap">
                   {detail.active_ban.reason || "-"}
@@ -298,7 +299,7 @@ export default function MemberDetail() {
               <InfoRow label="정지 처리일">
                 {formatDateTime(detail.active_ban.banned_at)}
               </InfoRow>
-            </FieldGroup>
+            </div>
           </SectionCard>
         )}
 
