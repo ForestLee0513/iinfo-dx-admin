@@ -183,7 +183,7 @@ export default function CrawlingTargetEdit() {
           <CardHeader>
             <CardTitle>{detail?.label ?? "대상 수정"}</CardTitle>
             <CardDescription>
-              등록된 크롤 대상의 이름·크롤러 설정을 수정합니다.
+              등록된 크롤링 대상의 이름·크롤러 설정을 수정합니다.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">

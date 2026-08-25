@@ -1,7 +1,10 @@
 import { Badge } from "@/components/ui/badge";
 import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type Column } from "@/components/table/DataTable";
-import type { SongMasterPreviewResponse, SongPreview } from "@/api/iidx/crawl/types";
+import type {
+  SongMasterPreviewResponse,
+  SongPreview,
+} from "@/api/iidx/crawl/types";
 
 const songPreviewColumns: Column<SongPreview>[] = [
   {
@@ -21,7 +24,7 @@ const songPreviewColumns: Column<SongPreview>[] = [
   { key: "version", header: "버전", cell: (s) => s.version ?? "-" },
   {
     key: "in_ac",
-    header: "AC 수록",
+    header: "아케이드 버전 수록 여부",
     cell: (s) => (
       <Badge variant={s.in_ac !== false ? "default" : "outline"}>
         {s.in_ac !== false ? "수록" : "미수록"}

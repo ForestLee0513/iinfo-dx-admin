@@ -134,7 +134,7 @@ function countJobResults(
 }
 
 /*
-등록된 크롤 대상 하나를 식별할 이름. kind:id 형태의 key보다 사람이 읽기 쉬운
+등록된 크롤링 대상 하나를 식별할 이름. kind:id 형태의 key보다 사람이 읽기 쉬운
 label을 우선 노출한다.
 */
 function targetDisplayName(
@@ -380,7 +380,7 @@ export default function Crawling() {
       </h1>
 
       <div className="flex flex-col gap-5">
-        {/* 등록된 크롤 대상 */}
+        {/* 등록된 크롤링 대상 */}
         <DataTable
           columns={targetColumns}
           data={targets}
@@ -388,11 +388,11 @@ export default function Crawling() {
           isLoading={targetsQuery.isPending}
           isError={targetsQuery.isError}
           skeletonRows={3}
-          emptyMessage="등록된 크롤 대상이 없습니다."
+          emptyMessage="등록된 크롤링 대상이 없습니다."
           errorMessage="크롤 대상을 불러오지 못했습니다."
           toolbar={
             <CardHeader>
-              <CardTitle>등록된 크롤 대상</CardTitle>
+              <CardTitle>등록된 크롤링 대상</CardTitle>
               <CardDescription>
                 {targetsQuery.data &&
                   Object.entries(targetsQuery.data.registered_crawlers)

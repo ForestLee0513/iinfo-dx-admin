@@ -7,7 +7,7 @@ export const CATALOG_SONGS_DEFAULT_PAGE = 1;
 export const CATALOG_SONGS_DEFAULT_PER_PAGE = 50;
 
 /*
-곡 목록 "AC 수록" 필터 셀렉트 옵션. in_ac(boolean) 파라미터로 변환한다.
+곡 목록 "아케이드 버전 수록 여부" 필터 셀렉트 옵션. in_ac(boolean) 파라미터로 변환한다.
 */
 export const AC_FILTER_OPTIONS = [
   { value: "전체", label: "전체" },

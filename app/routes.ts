@@ -11,6 +11,8 @@ export default [
     route("crawling/new/song", "routes/admin.crawling.new.song.tsx"),
     route("crawling/:targetKey/edit", "routes/admin.crawling.$targetKey.edit.tsx"),
     route("data", "routes/admin.data.tsx"),
+    route("data/songs/:songId", "routes/admin.data.songs.$songId.tsx"),
+    route("data/tables/:tableSlug", "routes/admin.data.tables.$tableSlug.tsx"),
   ]),
   // 매칭되지 않는 모든 경로(404). ErrorBoundary가 아닌 실제 라우트로 처리해
   // dev critical CSS 누락으로 인한 FOUC를 없애고 ThemeProvider 안에서 렌더한다.

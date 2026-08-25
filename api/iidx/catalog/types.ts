@@ -102,7 +102,7 @@ export interface SongListRequest {
   per_page?: number; // 기본 50
   title?: string; // 제목 부분 일치 검색
   version?: number; // 시리즈 버전 id
-  in_ac?: boolean; // true=AC 수록, false=미수록
+  in_ac?: boolean; // true=아케이드 버전 수록 여부, false=미수록
   sort?: string; // 기본 title
   order?: "asc" | "desc"; // 기본 asc
 }
