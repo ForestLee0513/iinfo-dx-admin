@@ -7,6 +7,9 @@ export default [
     route("members/:userId", "routes/admin.members.$userId.tsx"),
     route("permissions", "routes/admin.permissions.tsx"),
     route("crawling", "routes/admin.crawling.tsx"),
+    route("crawling/new", "routes/admin.crawling.new.tsx"),
+    route("crawling/new/song", "routes/admin.crawling.new.song.tsx"),
+    route("crawling/:targetKey/edit", "routes/admin.crawling.$targetKey.edit.tsx"),
     route("data", "routes/admin.data.tsx"),
   ]),
   // 매칭되지 않는 모든 경로(404). ErrorBoundary가 아닌 실제 라우트로 처리해

@@ -1,38 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useMemo, useState } from "react";
+import { Link } from "react-router";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Card,
   CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import {
   useCrawlJobsQuery,
-  useCrawlTargetDetailQuery,
   useCrawlTargetsQuery,
-  useCreateCrawlTargetMutation,
   useDeleteCrawlTargetMutation,
-  usePreviewCrawlMutation,
   useSchedulesQuery,
   useTriggerCrawlMutation,
-  useUpdateCrawlTargetMutation,
-  useUpdateScheduleMutation,
 } from "@/api/iidx/crawl/requests";
 import {
   CRAWL_KIND_OPTIONS,
@@ -42,19 +30,11 @@ import {
 import type {
   CrawlJob,
   CrawlJobStepStatus,
-  CrawlKind,
   CrawlTarget,
   JobStep,
   JobStepResultItem,
-  PreviewEntry,
-  PreviewTable,
-  SongMasterPreviewResponse,
-  SongPreview,
 } from "@/api/iidx/crawl/types";
-import { Field } from "@/components/Field";
-import { FilterCard } from "@/components/FilterCard";
 import { Modal } from "@/components/Modal";
-import { ScheduleEditor } from "@/components/ScheduleEditor";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { getApiErrorMessage } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/format";
@@ -164,271 +144,14 @@ function targetDisplayName(
   return target?.label ?? fallbackId;
 }
 
-const previewEntryColumns: Column<PreviewEntry>[] = [
-  {
-    key: "title",
-    header: "곡명",
-    cellClassName: "font-medium",
-    cell: (e) => e.title,
-  },
-  {
-    key: "series",
-    header: "시리즈",
-    cellClassName: "text-muted-foreground",
-    cell: (e) => e.series ?? "-",
-  },
-  { key: "play_style", header: "스타일", cell: (e) => e.play_style },
-  { key: "difficulty", header: "난이도", cell: (e) => e.difficulty },
-  {
-    key: "rating",
-    header: "등급/레벨",
-    cell: (e) => e.grade ?? e.level ?? e.rating ?? "-",
-  },
-  {
-    key: "table_type",
-    header: "표 종류",
-    cellClassName: "text-muted-foreground",
-    cell: (e) => e.table_type ?? "-",
-  },
-];
-
-/*
-난이도표 크롤러(5ch_sheet, numeric_json 등) 미리보기 결과. 한 번의 크롤로 여러
-표가 나올 수 있어 표 단위로 DataTable을 나눠 보여준다.
-*/
-function PreviewTableResult({ tables }: { tables?: PreviewTable[] | null }) {
-  if (!tables || tables.length === 0) return null;
-
-  return (
-    <div className="flex flex-col gap-4">
-      {tables.map((t, i) => (
-        <DataTable
-          key={i}
-          columns={previewEntryColumns}
-          data={t.entries}
-          rowKey={(e) => `${e.title}-${e.difficulty}-${e.play_style}`}
-          emptyMessage="곡 데이터가 없습니다."
-          toolbar={
-            <CardHeader>
-              <CardTitle>{t.table.name}</CardTitle>
-              <CardDescription>{t.entry_count}곡</CardDescription>
-            </CardHeader>
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
-const songPreviewColumns: Column<SongPreview>[] = [
-  {
-    key: "tag",
-    header: "태그",
-    cellClassName: "text-muted-foreground",
-    cell: (s) => s.tag,
-  },
-  {
-    key: "title",
-    header: "제목",
-    cellClassName: "font-medium",
-    cell: (s) => s.title,
-  },
-  { key: "genre", header: "장르", cell: (s) => s.genre ?? "-" },
-  { key: "artist", header: "아티스트", cell: (s) => s.artist ?? "-" },
-  { key: "version", header: "버전", cell: (s) => s.version ?? "-" },
-  {
-    key: "in_ac",
-    header: "AC 수록",
-    cell: (s) => (
-      <Badge variant={s.in_ac !== false ? "default" : "outline"}>
-        {s.in_ac !== false ? "수록" : "미수록"}
-      </Badge>
-    ),
-  },
-  {
-    key: "charts",
-    header: "채보 수",
-    cellClassName: "text-muted-foreground tabular-nums",
-    cell: (s) => s.charts.length,
-  },
-];
-
-/*
-곡 마스터 크롤러(textage 등) 미리보기 결과. 난이도표 결과(PreviewTableResult)와
-달리 SongMasterPreviewResponse.songs를 곡 단위 DataTable로 보여준다.
-*/
-function PreviewSongResult({
-  result,
-}: {
-  result?: SongMasterPreviewResponse | null;
-}) {
-  if (!result) return null;
-
-  return (
-    <DataTable
-      columns={songPreviewColumns}
-      data={result.songs}
-      rowKey={(s) => s.tag}
-      emptyMessage="곡 데이터가 없습니다."
-      toolbar={
-        <CardHeader>
-          <CardTitle>{result.source}</CardTitle>
-          <CardDescription>
-            곡 {result.songs_total}개 · 채보 {result.charts_total}개 (버전{" "}
-            {result.versions.length}개)
-          </CardDescription>
-        </CardHeader>
-      }
-    />
-  );
-}
-
-/*
-크롤러별 추가 설정 폼 상태. 표시 여부는 kind에 따라 갈리지만 값 자체는
-미리보기/즉시 실행 폼과 대상 등록/수정 모달이 공통으로 쓴다.
-*/
-type CrawlerFormFields = {
-  url: string;
-  playStyle: string;
-  level: string;
-  slug: string;
-  name: string;
-  source: string;
-};
-
-const PLAY_STYLE_OPTIONS = ["미지정", "SP", "DP"].map((o) => ({
-  value: o,
-  label: o,
-}));
-
-const EMPTY_CRAWLER_FIELDS: CrawlerFormFields = {
-  url: "",
-  playStyle: "미지정",
-  level: "",
-  slug: "",
-  name: "",
-  source: "",
-};
-
-/*
-빈 값/기본값은 제외하고 서버에 보낼 크롤러별 설정 객체를 만든다.
-*/
-function buildCrawlerFields(
-  fields: CrawlerFormFields,
-): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  if (fields.url.trim()) out.url = fields.url.trim();
-  if (fields.playStyle !== "미지정") out.play_style = fields.playStyle;
-  if (fields.level.trim()) out.level = Number(fields.level);
-  if (fields.slug.trim()) out.slug = fields.slug.trim();
-  if (fields.name.trim()) out.name = fields.name.trim();
-  if (fields.source.trim()) out.source = fields.source.trim();
-  return out;
-}
-
-/*
-난이도표(kind="table")에만 필요한 크롤러별 설정 입력들. 곡 마스터는 백엔드에
-baseURL 등이 고정되어 있어 별도 입력이 필요 없다.
-*/
-function CrawlerFieldsFieldset({
-  kind,
-  fields,
-  onChange,
-}: {
-  kind: CrawlKind;
-  fields: CrawlerFormFields;
-  onChange: (patch: Partial<CrawlerFormFields>) => void;
-}) {
-  if (kind !== "table") return null;
-
-  return (
-    <>
-      <Field label="URL">
-        <Input
-          value={fields.url}
-          onChange={(e) => onChange({ url: e.target.value })}
-          placeholder="https://docs.google.com/spreadsheets/d/.../pubhtml"
-        />
-      </Field>
-      <Field label="플레이 스타일">
-        <Select
-          value={fields.playStyle}
-          items={PLAY_STYLE_OPTIONS}
-          onValueChange={(value) => {
-            if (value !== null) onChange({ playStyle: value });
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PLAY_STYLE_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field label="레벨">
-        <Input
-          type="number"
-          min={1}
-          max={12}
-          value={fields.level}
-          onChange={(e) => onChange({ level: e.target.value })}
-          placeholder="1~12"
-        />
-      </Field>
-      <Field label="표 slug">
-        <Input
-          value={fields.slug}
-          onChange={(e) => onChange({ slug: e.target.value })}
-        />
-      </Field>
-      <Field label="표 이름">
-        <Input
-          value={fields.name}
-          onChange={(e) => onChange({ name: e.target.value })}
-        />
-      </Field>
-      <Field label="출처">
-        <Input
-          value={fields.source}
-          onChange={(e) => onChange({ source: e.target.value })}
-          placeholder="5ch, cpi 등"
-        />
-      </Field>
-    </>
-  );
-}
-
 export default function Crawling() {
   const targetsQuery = useCrawlTargetsQuery();
   const jobsQuery = useCrawlJobsQuery();
   const schedulesQuery = useSchedulesQuery();
   const triggerMutation = useTriggerCrawlMutation();
-  const previewMutation = usePreviewCrawlMutation();
 
-  const [triggerError, setTriggerError] = useState<string | null>(null);
-  const [scheduleTarget, setScheduleTarget] = useState<CrawlTarget | null>(
-    null,
-  );
-  // "create" = 신규 등록, CrawlTarget = 해당 대상 수정
-  const [targetModal, setTargetModal] = useState<"create" | CrawlTarget | null>(
-    null,
-  );
   const deleteTargetMutation = useDeleteCrawlTargetMutation();
   const [resultJob, setResultJob] = useState<CrawlJob | null>(null);
-
-  // 미리보기/즉시 실행 폼
-  const [kind, setKind] = useState<CrawlKind>("table");
-  const [crawler, setCrawler] = useState("5ch_sheet");
-  const [fields, setFields] = useState<CrawlerFormFields>(EMPTY_CRAWLER_FIELDS);
-
-  function patchFields(patch: Partial<CrawlerFormFields>) {
-    setFields((f) => ({ ...f, ...patch }));
-  }
 
   const targets = targetsQuery.data?.targets ?? [];
   const targetsByKindAndId = useMemo(() => {
@@ -443,40 +166,6 @@ export default function Crawling() {
     schedules.forEach((s) => map.set(s.target_key, s));
     return map;
   }, [schedulesQuery.data]);
-
-  const crawlerOptions = targetsQuery.data?.registered_crawlers[kind] ?? [];
-  const crawlerSelectItems = crawlerOptions.map((c) => ({
-    value: c,
-    label: c,
-  }));
-
-  async function handlePreview() {
-    setTriggerError(null);
-    try {
-      await previewMutation.mutateAsync({
-        kind,
-        crawler,
-        target: buildCrawlerFields(fields),
-      });
-    } catch {
-      // 오류 메시지는 previewMutation.error에서 렌더링한다.
-    }
-  }
-
-  async function handleAdHocTrigger() {
-    setTriggerError(null);
-    try {
-      await triggerMutation.mutateAsync({
-        scope: kind,
-        target: { crawler, ...buildCrawlerFields(fields) },
-      });
-      window.alert(
-        "크롤 작업을 실행했습니다. 아래 작업 내역에서 진행 상황을 확인하세요.",
-      );
-    } catch (err) {
-      setTriggerError(getApiErrorMessage(err));
-    }
-  }
 
   async function handleDeleteTarget(t: CrawlTarget) {
     if (
@@ -493,7 +182,6 @@ export default function Crawling() {
   }
 
   async function handleTargetTrigger(target: CrawlTarget) {
-    setTriggerError(null);
     try {
       await triggerMutation.mutateAsync({
         scope: target.kind,
@@ -508,7 +196,6 @@ export default function Crawling() {
   async function handleFullTrigger() {
     if (!window.confirm("전체 대상(곡 마스터 → 난이도표)을 동기화할까요?"))
       return;
-    setTriggerError(null);
     try {
       await triggerMutation.mutateAsync({ scope: "full" });
       window.alert("전체 동기화 작업을 실행했습니다.");
@@ -516,8 +203,6 @@ export default function Crawling() {
       window.alert(getApiErrorMessage(err));
     }
   }
-
-  const previewResult = previewMutation.data;
 
   const targetColumns: Column<CrawlTarget>[] = [
     {
@@ -585,16 +270,16 @@ export default function Crawling() {
           >
             지금 실행
           </Button>
+
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => setScheduleTarget(t)}
-          >
-            스케줄 설정
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => setTargetModal(t)}>
-            수정
-          </Button>
+            render={
+              <Link to={`/crawling/${encodeURIComponent(t.key)}/edit`}>
+                수정
+              </Link>
+            }
+          />
           <Button
             size="sm"
             variant="ghost"
@@ -721,10 +406,14 @@ export default function Crawling() {
                 <div className="flex gap-2">
                   <Button
                     variant="outline"
-                    onClick={() => setTargetModal("create")}
-                  >
-                    대상 등록
-                  </Button>
+                    render={<Link to="/crawling/new">난이도표 등록</Link>}
+                  />
+                  <Button
+                    variant="outline"
+                    render={
+                      <Link to="/crawling/new/song">수록곡 정보 등록</Link>
+                    }
+                  />
                   <Button
                     variant="outline"
                     onClick={handleFullTrigger}
@@ -737,114 +426,6 @@ export default function Crawling() {
             </CardHeader>
           }
         />
-
-        {/* 미리보기 & 즉시 실행 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>미리보기 &amp; 즉시 실행</CardTitle>
-            <CardDescription>
-              등록 여부와 무관하게 대상을 직접 지정해 크롤 결과를 미리 보거나
-              바로 실행합니다. 미리보기는 실제 저장소에 반영되지 않습니다.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <FilterCard>
-              <Field label="종류" required>
-                <Select
-                  value={kind}
-                  items={CRAWL_KIND_OPTIONS}
-                  onValueChange={(value) => {
-                    if (value !== null) {
-                      const nextKind = value as CrawlKind;
-                      setKind(nextKind);
-                      setCrawler(
-                        targetsQuery.data?.registered_crawlers[nextKind]?.[0] ??
-                          "",
-                      );
-                      // 종류가 바뀌면 이전 종류에서 입력한 값이 그대로 남아
-                      // 실행/미리보기에 섞여 들어가지 않도록 폼을 초기화한다.
-                      setFields(EMPTY_CRAWLER_FIELDS);
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CRAWL_KIND_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <Field label="크롤러" required>
-                <Select
-                  value={crawler}
-                  items={crawlerSelectItems}
-                  onValueChange={(value) => {
-                    if (value !== null) setCrawler(value);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="선택" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {crawlerOptions.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </Field>
-              <CrawlerFieldsFieldset
-                kind={kind}
-                fields={fields}
-                onChange={patchFields}
-              />
-            </FilterCard>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handlePreview}
-                disabled={!crawler || previewMutation.isPending}
-              >
-                {previewMutation.isPending ? "미리보기 조회 중…" : "미리보기"}
-              </Button>
-              <Button
-                onClick={handleAdHocTrigger}
-                disabled={!crawler || triggerMutation.isPending}
-              >
-                {triggerMutation.isPending ? "실행 중…" : "즉시 실행"}
-              </Button>
-            </div>
-
-            {triggerError && (
-              <Alert variant="destructive">
-                <AlertDescription>{triggerError}</AlertDescription>
-              </Alert>
-            )}
-
-            {previewMutation.isError && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {getApiErrorMessage(previewMutation.error)}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {previewResult && previewResult.kind === "song" && (
-              <PreviewSongResult result={previewResult.song_result} />
-            )}
-
-            {previewResult && previewResult.kind === "table" && (
-              <PreviewTableResult tables={previewResult.tables} />
-            )}
-          </CardContent>
-        </Card>
 
         {/* 작업 내역 */}
         <DataTable
@@ -867,299 +448,11 @@ export default function Crawling() {
         />
       </div>
 
-      {/* 스케줄 설정 모달 */}
-      {scheduleTarget && (
-        <ScheduleModal
-          target={scheduleTarget}
-          onClose={() => setScheduleTarget(null)}
-        />
-      )}
-
-      {/* 대상 등록/수정 모달 */}
-      {targetModal && (
-        <TargetFormModal
-          target={targetModal === "create" ? null : targetModal}
-          registeredCrawlers={targetsQuery.data?.registered_crawlers ?? {}}
-          onClose={() => setTargetModal(null)}
-        />
-      )}
-
       {/* 작업 결과 상세 모달 */}
       {resultJob && (
         <JobResultModal job={resultJob} onClose={() => setResultJob(null)} />
       )}
     </div>
-  );
-}
-
-/*
-대상 1건의 스케줄을 조회/수정하는 모달. 저장 시 대상의 target_key(=CrawlTarget.key)
-로 PUT하여 Redis 스케줄을 갱신한다.
-*/
-function ScheduleModal({
-  target,
-  onClose,
-}: {
-  target: CrawlTarget;
-  onClose: () => void;
-}) {
-  const schedulesQuery = useSchedulesQuery();
-  const updateScheduleMutation = useUpdateScheduleMutation();
-
-  const current = schedulesQuery.data?.schedules.find(
-    (s) => s.target_key === target.key,
-  );
-
-  const [enabled, setEnabled] = useState(current?.enabled ?? false);
-  const [triggers, setTriggers] = useState(current?.triggers ?? []);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleSave() {
-    setError(null);
-    try {
-      await updateScheduleMutation.mutateAsync({
-        targetKey: target.key,
-        enabled,
-        triggers,
-      });
-      onClose();
-    } catch (err) {
-      setError(getApiErrorMessage(err));
-    }
-  }
-
-  return (
-    <Modal
-      onClose={onClose}
-      closeDisabled={updateScheduleMutation.isPending}
-      title={`스케줄 설정 — ${target.label}`}
-      description="지정한 요일·시각에 자동으로 크롤을 실행합니다."
-      footer={
-        <>
-          <Button
-            variant="outline"
-            onClick={onClose}
-            disabled={updateScheduleMutation.isPending}
-          >
-            취소
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={updateScheduleMutation.isPending}
-          >
-            {updateScheduleMutation.isPending ? "저장 중…" : "저장"}
-          </Button>
-        </>
-      }
-    >
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
-          <span className="text-sm">스케줄 활성화</span>
-        </div>
-
-        <ScheduleEditor triggers={triggers} onChange={setTriggers} />
-
-        {error && (
-          <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-      </div>
-    </Modal>
-  );
-}
-
-/*
-크롤 대상 등록/수정 모달. target이 null이면 등록, 아니면 해당 대상 수정.
-수정 시에는 kind/id를 바꿀 수 없어(target_key로 고정) 읽기 전용으로 보여주고,
-url 등 크롤러별 설정은 GET /targets/{target_key}로 상세를 불러와 프리필한다.
-*/
-function TargetFormModal({
-  target,
-  registeredCrawlers,
-  onClose,
-}: {
-  target: CrawlTarget | null;
-  registeredCrawlers: Record<string, string[]>;
-  onClose: () => void;
-}) {
-  const isEdit = target !== null;
-  const detailQuery = useCrawlTargetDetailQuery(target?.key ?? "", isEdit);
-  const createMutation = useCreateCrawlTargetMutation();
-  const updateMutation = useUpdateCrawlTargetMutation();
-
-  const [kind, setKind] = useState<CrawlKind>(target?.kind ?? "table");
-  const [id, setId] = useState(target?.id ?? "");
-  const [label, setLabel] = useState(target?.label ?? "");
-  const [crawler, setCrawler] = useState(
-    target?.crawler ?? registeredCrawlers[kind]?.[0] ?? "",
-  );
-  const [fields, setFields] = useState<CrawlerFormFields>(EMPTY_CRAWLER_FIELDS);
-  const [error, setError] = useState<string | null>(null);
-  const [prefilled, setPrefilled] = useState(false);
-
-  // 상세 조회가 끝나면 크롤러별 설정(url 등)을 한 번만 폼에 채워 넣는다.
-  useEffect(() => {
-    if (!isEdit || !detailQuery.data || prefilled) return;
-    const detail = detailQuery.data;
-    setLabel(detail.label);
-    setCrawler(detail.crawler);
-    setFields({
-      url: typeof detail.url === "string" ? detail.url : "",
-      playStyle:
-        typeof detail.play_style === "string" ? detail.play_style : "미지정",
-      level: typeof detail.level === "number" ? String(detail.level) : "",
-      slug: typeof detail.slug === "string" ? detail.slug : "",
-      name: typeof detail.name === "string" ? detail.name : "",
-      source: typeof detail.source === "string" ? detail.source : "",
-    });
-    setPrefilled(true);
-  }, [isEdit, detailQuery.data, prefilled]);
-
-  function patchFields(patch: Partial<CrawlerFormFields>) {
-    setFields((f) => ({ ...f, ...patch }));
-  }
-
-  const crawlerOptions = registeredCrawlers[kind] ?? [];
-  const crawlerSelectItems = crawlerOptions.map((c) => ({
-    value: c,
-    label: c,
-  }));
-  const isPending = createMutation.isPending || updateMutation.isPending;
-  const formInvalid = !id.trim() || !label.trim() || !crawler;
-  const detailLoading = isEdit && detailQuery.isPending;
-
-  async function handleSubmit() {
-    setError(null);
-    try {
-      if (isEdit && target) {
-        await updateMutation.mutateAsync({
-          targetKey: target.key,
-          label: label.trim(),
-          crawler,
-          ...buildCrawlerFields(fields),
-        });
-      } else {
-        await createMutation.mutateAsync({
-          kind,
-          id: id.trim(),
-          label: label.trim(),
-          crawler,
-          ...buildCrawlerFields(fields),
-        });
-      }
-      onClose();
-    } catch (err) {
-      setError(getApiErrorMessage(err));
-    }
-  }
-
-  return (
-    <Modal
-      onClose={onClose}
-      closeDisabled={isPending}
-      title={isEdit ? `대상 수정 — ${target?.label}` : "대상 등록"}
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose} disabled={isPending}>
-            취소
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={formInvalid || isPending || detailLoading}
-          >
-            {isPending ? "저장 중…" : "저장"}
-          </Button>
-        </>
-      }
-    >
-      {detailLoading ? (
-        <Skeleton className="h-64 rounded" />
-      ) : (
-        <div className="flex flex-col gap-4">
-          <FilterCard>
-            <Field label="종류" required>
-              {isEdit ? (
-                <div className="py-2 text-sm">
-                  {CRAWL_KIND_OPTIONS.find((o) => o.value === kind)?.label ??
-                    kind}
-                </div>
-              ) : (
-                <Select
-                  value={kind}
-                  items={CRAWL_KIND_OPTIONS}
-                  onValueChange={(value) => {
-                    if (value !== null) {
-                      const nextKind = value as CrawlKind;
-                      setKind(nextKind);
-                      setCrawler(registeredCrawlers[nextKind]?.[0] ?? "");
-                      setFields(EMPTY_CRAWLER_FIELDS);
-                    }
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CRAWL_KIND_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value}>
-                        {o.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </Field>
-            <Field label="ID" required>
-              {isEdit ? (
-                <div className="py-2 text-sm text-muted-foreground">{id}</div>
-              ) : (
-                <Input
-                  value={id}
-                  onChange={(e) => setId(e.target.value)}
-                  placeholder="5ch_sp12"
-                />
-              )}
-            </Field>
-            <Field label="이름" required>
-              <Input value={label} onChange={(e) => setLabel(e.target.value)} />
-            </Field>
-            <Field label="크롤러" required>
-              <Select
-                value={crawler}
-                items={crawlerSelectItems}
-                onValueChange={(value) => {
-                  if (value !== null) setCrawler(value);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  {crawlerOptions.map((c) => (
-                    <SelectItem key={c} value={c}>
-                      {c}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
-            <CrawlerFieldsFieldset
-              kind={kind}
-              fields={fields}
-              onChange={patchFields}
-            />
-          </FilterCard>
-
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </div>
-      )}
-    </Modal>
   );
 }
 
