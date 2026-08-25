@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 
 import {
@@ -30,9 +31,10 @@ import {
   useUserBansQuery,
   useUserDetailQuery,
 } from "@/api/users/requests";
+import { useUserIidxProfileQuery } from "@/api/iidx/profile/requests";
 import type { AuthMemberRole } from "@/api/auth/types";
 import { AUTH_MEMBER_ROLE } from "@/api/auth/constants";
-import { ROLE_LABELS, ROLE_BADGE_VARIANT } from "@/api/auth/roles";
+import { ROLE_LABELS } from "@/api/auth/roles";
 import { useMyInfoQuery } from "@/api/auth/requests";
 import { getApiErrorMessage } from "@/lib/api-error";
 import {
@@ -42,6 +44,7 @@ import {
   type BanDurationValue,
 } from "@/components/BanDurationPicker";
 import { RequiredMark } from "@/components/Field";
+import { IidxProfileCard } from "@/components/IidxProfileCard";
 import { Modal } from "@/components/Modal";
 import { ProviderBadge } from "@/components/ProviderBadge";
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -126,6 +129,8 @@ export default function MemberDetail() {
   const { data: detail, isPending, isError } = useUserDetailQuery(userId!);
   const { data: bansData, isPending: bansPending } = useUserBansQuery(userId!);
   const { data: me } = useMyInfoQuery();
+  const { data: iidxProfile, isPending: iidxProfilePending } =
+    useUserIidxProfileQuery(userId!);
 
   const [banModalOpen, setBanModalOpen] = useState(false);
   const [banReason, setBanReason] = useState("");
@@ -260,33 +265,14 @@ export default function MemberDetail() {
                 {detail.id}
               </span>
             </InfoRow>
-            <InfoRow label="이메일">{detail.email ?? "-"}</InfoRow>
             <InfoRow label="플랫폼">
               <ProviderBadge provider={detail.provider} />
             </InfoRow>
+            <InfoRow label="이메일">{detail.email ?? "-"}</InfoRow>
             <InfoRow label="가입일">{formatDate(detail.created_at)}</InfoRow>
             <InfoRow label="최근 로그인">
               {formatDate(detail.last_sign_in_at)}
             </InfoRow>
-          </FieldGroup>
-        </SectionCard>
-
-        {/* 프로필 */}
-        <SectionCard title="프로필">
-          <FieldGroup>
-            <InfoRow label="역할">
-              <Badge variant={ROLE_BADGE_VARIANT[currentRole]}>
-                {ROLE_LABELS[currentRole]}
-              </Badge>
-            </InfoRow>
-            <InfoRow label="프로필 공개">
-              {detail.profile.is_public === false ? "비공개" : "공개"}
-            </InfoRow>
-            {detail.profile.updated_at && (
-              <InfoRow label="프로필 수정일">
-                {formatDate(detail.profile.updated_at)}
-              </InfoRow>
-            )}
           </FieldGroup>
         </SectionCard>
 
@@ -315,36 +301,6 @@ export default function MemberDetail() {
             </FieldGroup>
           </SectionCard>
         )}
-
-        {/* 액션 */}
-        <div className="flex flex-wrap gap-2">
-          {detail.is_banned ? (
-            <Button
-              variant="outline"
-              onClick={handleUnban}
-              disabled={isMutating}
-            >
-              {unbanMutation.isPending ? "정지 해제 중…" : "정지 해제"}
-            </Button>
-          ) : (
-            <Button
-              variant="destructive"
-              onClick={openBanModal}
-              disabled={isMutating}
-            >
-              {banMutation.isPending ? "정지 처리 중…" : "정지 처리"}
-            </Button>
-          )}
-          {isSuperAdmin && (
-            <Button
-              variant="outline"
-              onClick={openRoleModal}
-              disabled={isMutating}
-            >
-              역할 변경
-            </Button>
-          )}
-        </div>
 
         {/* 정지 이력 */}
         <Card>
@@ -419,6 +375,46 @@ export default function MemberDetail() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* 액션 */}
+        <div className="flex flex-wrap gap-2">
+          {detail.is_banned ? (
+            <Button
+              variant="outline"
+              onClick={handleUnban}
+              disabled={isMutating}
+            >
+              {unbanMutation.isPending ? "정지 해제 중…" : "정지 해제"}
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              onClick={openBanModal}
+              disabled={isMutating}
+            >
+              {banMutation.isPending ? "정지 처리 중…" : "정지 처리"}
+            </Button>
+          )}
+          {isSuperAdmin && (
+            <Button
+              variant="outline"
+              onClick={openRoleModal}
+              disabled={isMutating}
+            >
+              역할 변경
+            </Button>
+          )}
+        </div>
+
+        {/* 게임별 프로필 — 서비스가 실제로 열린 게임만 탭에 노출한다(IIDX 외 게임은 미개발) */}
+        <Tabs defaultValue="iidx">
+          <TabsList>
+            <TabsTrigger value="iidx">IIDX</TabsTrigger>
+          </TabsList>
+          <TabsContent value="iidx">
+            <IidxProfileCard profile={iidxProfile} isPending={iidxProfilePending} />
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* 정지 처리 모달 */}
