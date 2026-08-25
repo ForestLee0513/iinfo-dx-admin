@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -62,7 +63,7 @@ export function DataTable<T>({
   const colSpan = columns.length;
 
   return (
-    <Card className={cardClassName ?? ""}>
+    <Card className={cn("min-w-0", cardClassName)}>
       {toolbar}
 
       <CardContent>
