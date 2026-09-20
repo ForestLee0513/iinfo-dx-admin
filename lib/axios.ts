@@ -4,9 +4,11 @@ import type { AxiosError, InternalAxiosRequestConfig } from "axios";
 import { AUTH_BASE } from "@/api/auth/constants";
 import type { AuthRefreshResponse } from "@/api/auth/types";
 
-// 프록시를 통해 same-origin으로 처리하므로 baseURL은 비워둔다.
-// dev: Vite proxy(/api → localhost:8000), prod: nginx 등 리버스 프록시 필요
-export const API_BASE_URL = "";
+// 브라우저에서 배포된 백엔드 API를 직접 호출한다.
+export const API_BASE_URL = (import.meta.env.VITE_API_URL ?? "").replace(
+  /\/+$/,
+  "",
+);
 
 const REFRESH_URL = `${AUTH_BASE}/refresh`;
 const LOGIN_URL_PREFIX = `${AUTH_BASE}/login`;

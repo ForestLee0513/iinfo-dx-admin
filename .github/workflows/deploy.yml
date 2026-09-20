@@ -1,0 +1,55 @@
+name: Deploy to ForestLee
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forestlee-iinfo-dx-admin-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Join Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+          ping: 100.73.242.113
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.FORESTLEE_SSH_PRIVATE_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' '100.73.242.113 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIbiZBeEcOHDUpSBN793Mx3+BW6XrR/Y86jEumJsPrBz' > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Clone and deploy exact commit
+        env:
+          DEPLOY_SHA: ${{ github.sha }}
+        run: |
+          ssh -o BatchMode=yes -o StrictHostKeyChecking=yes forestlee@100.73.242.113 \
+            bash -s -- "$DEPLOY_SHA" <<'REMOTE'
+          set -euo pipefail
+          sha=$1
+          [[ $sha =~ ^[0-9a-f]{40}$ ]]
+          root=/home/forestlee/deploy/iinfo-dx-admin
+          mkdir -p "$root"
+          if [[ ! -d $root/repo/.git ]]; then
+            git clone https://github.com/ForestLee0513/iinfo-dx-admin.git "$root/repo"
+          fi
+          git -C "$root/repo" fetch --no-tags origin main
+          git -C "$root/repo" checkout --force --detach "$sha"
+          bash "$root/repo/deploy/deploy.sh" "$sha"
+          REMOTE

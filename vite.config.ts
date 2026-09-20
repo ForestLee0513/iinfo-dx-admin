@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      allowedHosts: ["iinfo-dx-admin.forestlee.me"],
       proxy: {
         "/api/v1": {
           target: env.VITE_API_URL ?? "http://localhost:8000",

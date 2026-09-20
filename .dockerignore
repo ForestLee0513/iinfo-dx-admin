@@ -1,4 +1,7 @@
+.git
+.github
 .react-router
 build
 node_modules
+.env*
 README.md

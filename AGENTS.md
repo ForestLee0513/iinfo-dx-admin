@@ -19,9 +19,9 @@ There is no `lint` script and no ESLint config in this project (only `@tanstack/
 
 There is no `.env.local` convention here (no `NEXT_PUBLIC_*` vars). The only environment knob is:
 
-- `VITE_API_URL` — backend base URL used **only by the dev server's Vite proxy** (`vite.config.ts` proxies `/api/v1` → `VITE_API_URL`, default `http://localhost:8000`). Backend routes live under `/api/v1/web/...` and `/api/v1/admin/...`.
+- `VITE_API_URL` — backend base URL used by the browser axios client and by the dev server Vite proxy. Backend routes live under `/api/v1/web/...` and `/api/v1/admin/...`.
 
-In both dev and prod, the browser calls the API **same-origin** (`api/axios.ts`'s `API_BASE_URL` is `""`) — dev relies on the Vite proxy above, production relies on a reverse proxy (e.g. nginx) placed in front of the app server. There is no `basePath`/`assetPrefix` concept in this setup, so there's no static-import requirement for images — reference `public/` assets by plain string path as usual.
+In both dev and prod, the browser calls the backend configured by `VITE_API_URL`; production uses `https://iinfo-dx-api.forestlee.me`. There is no `basePath`/`assetPrefix` concept in this setup, so there's no static-import requirement for images — reference `public/` assets by plain string path as usual.
 
 ## Project layout
 
@@ -130,7 +130,7 @@ App-wide plumbing that isn't tied to any domain or screen. Domains grow, screens
 
 ### `axios.ts` — shared HTTP instance & 401 recovery
 
-- Exports the shared `api` axios instance. Sessions are cookie-based (`withCredentials: true`), and `API_BASE_URL` is left empty so requests go same-origin (see Environment above).
+- Exports the shared `api` axios instance. Sessions are cookie-based (`withCredentials: true`), and `API_BASE_URL` comes from `VITE_API_URL` (see Environment above).
 - The access token for Bearer-protected endpoints lives **in memory only** (`setAccessToken`), so a page refresh drops it **intentionally** — real identity rests in the httpOnly refresh cookie (XSS can't read it), and the in-memory token is a recoverable derivative.
 - On any 401 (except login/refresh requests themselves), the response interceptor calls `POST /refresh` — **deduplicated through a single shared promise** so concurrent 401s trigger one refresh — then retries the original request **exactly once** (`_retried` flag). A 401 on refresh/login itself is a credential error and propagates as-is (no recursion). A 401 that survives the retry calls the `authErrorCallback` registered via `setAuthErrorCallback` (see `app/routes/admin.tsx`, which wires it to clear the `me` cache and redirect to `/`).
 

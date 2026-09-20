@@ -1,0 +1,31 @@
+name: iinfo-dx-admin
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${ADMIN_API_URL:?Set ADMIN_API_URL}
+    container_name: iinfo-dx-admin
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      PORT: 3000
+      TZ: Asia/Seoul
+      DEPLOY_SHA: ${DEPLOY_SHA:-unknown}
+    networks:
+      - proxy
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3000/').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+networks:
+  proxy:
+    external: true
+    name: services_proxy
